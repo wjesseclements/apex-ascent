@@ -8,7 +8,7 @@ holds the law.
 
 - `trainer/`: Python 3.11+, uv, Gymnasium, Stable-Baselines3 (PPO),
   TensorBoard, pytest. CPU only.
-- `app/`: Vite + React 18 + TypeScript strict, Zustand, Tailwind + CSS vars,
+- `app/`: Vite + React 19 + TypeScript strict, Zustand, Tailwind + CSS vars,
   Canvas 2D, Zod, Vitest + React Testing Library, ESLint + Prettier.
 - Shared: `tracks/*.json`; trajectory JSON schema (Zod is the source of truth,
   generated JSON Schema validated by Python tests).
