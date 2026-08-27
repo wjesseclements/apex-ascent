@@ -1,5 +1,50 @@
-/* Placeholder; design tokens + Tailwind arrive in PR 2. */
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
+@import 'tailwindcss';
+
+/*
+ * Design tokens — the single source of truth for color, type, radius and
+ * motion. Tailwind v4's @theme emits each as a real CSS custom property
+ * (var(--color-accent) etc.) AND a utility class (bg-accent, text-muted …), so
+ * components never carry raw hex/px values: they reference tokens.
+ */
+@theme {
+  /* Surfaces: near-black asphalt → raised panels */
+  --color-bg: #0b0d12;
+  --color-surface: #141821;
+  --color-surface-raised: #1c2130;
+  --color-border: #2a3142;
+
+  /* Text */
+  --color-text: #e8ecf3;
+  --color-muted: #8b95a8;
+
+  /* Brand accent: apex orange, used sparingly for the thing that matters */
+  --color-accent: #ff4d1f;
+  --color-accent-soft: #ff4d1f33;
+
+  /* Telemetry signals — fixed meanings, reused by every HUD/trace later:
+     throttle = green, brake = red, lateral (cornering) = blue */
+  --color-throttle: #37d67a;
+  --color-brake: #ff3b5c;
+  --color-lateral: #4da3ff;
+
+  /* Type: system stacks only (no external font hosts) */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Shape */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.875rem;
+
+  /* Motion */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-bg text-text font-sans antialiased;
+  }
 }
