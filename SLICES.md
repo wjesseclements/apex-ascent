@@ -43,8 +43,12 @@ matches apex-evolve's shape).
   episode stats printed by a small CLI.
 
 **Demo checklist:** `uv run evaluate --policy scripted` completes laps and
-reports plausible lap times · random policy crashes fast (sanity) · obs ranges
-property-tested.
+reports plausible lap times · `--policy random-throttle` (uniform steer,
+throttle held ≥ 0.2) crashes within a few seconds — the wall is real ·
+`--policy random` (uniform both axes) dithers on the start line without
+crashing — reported as-is: it foreshadows the exploration problem PPO has to
+solve (the Δs reward must pull mean drive upward before anything else happens)
+· obs ranges property-tested.
 
 ## Slice 4 — PPO training loop + checkpoints + TensorBoard
 
