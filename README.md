@@ -36,8 +36,9 @@ Trainer (`cd trainer`, needs [uv](https://docs.astral.sh/uv/)):
 ```
 uv sync
 uv run pytest
+uv run evaluate --policy scripted             # baseline drivers: scripted | random | random-throttle
 uv run train --steps N [--resume runs/<id>]   # Slice 4
-uv run evaluate runs/<id> [--checkpoint N]    # Slice 3/4
+uv run evaluate runs/<id> [--checkpoint N]    # Slice 4
 uv run tensorboard                            # Slice 4
 ```
 
@@ -65,7 +66,9 @@ machines or library versions. See SPEC §9.
 
 ## Status
 
-Slice 1 (bootstrap) — repo, scaffolds, CI, deploy. See SLICES.md for what's next.
+Slices 1–3 done: bootstrap, pure sim core (traction circle, tracks, raycasts,
+progress), Gymnasium env `ApexDrive-v0` with baseline policies. Next: PPO
+training (Slice 4). See SLICES.md.
 
 ## License
 
