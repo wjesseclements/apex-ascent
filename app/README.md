@@ -3,7 +3,7 @@
 Browser half of apex-ascent: trajectory replay viewer, checkpoint gallery,
 traction-circle widget, and (Slice 8) live in-browser driving.
 
-Vite + React 18 + TypeScript strict · Zustand · Tailwind + CSS design tokens ·
+Vite + React 19 + TypeScript strict · Zustand · Tailwind + CSS design tokens ·
 Canvas 2D · Zod · Vitest + React Testing Library · ESLint + Prettier.
 
 ```

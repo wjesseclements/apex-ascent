@@ -2,7 +2,7 @@ import { TokenSwatches } from './components/TokenSwatches';
 
 const BOOTSTRAP_ITEMS = [
   { label: 'trainer/ — uv project, pytest, ruff', done: true },
-  { label: 'app/ — Vite, React 18, TS strict, Vitest, ESLint purity rule', done: true },
+  { label: 'app/ — Vite, React 19, TS strict, Vitest, ESLint purity rule', done: true },
   { label: 'CI — trainer · app · verify, required on main', done: true },
   { label: 'Deployed on Vercel — human step, pending', done: false },
 ] as const;
