@@ -57,18 +57,29 @@ that only passes when both do. `main` accepts squash merges through PRs only
 (ruleset in `.github/rulesets/main.json`). The app deploys to Vercel from
 `app/` on every merge.
 
-## Reproducibility (to be filled in as the slices land)
+## Reproducibility
+
+Every `uv run train` leaves `trainer/runs/<run_id>/` with a full config
+snapshot, metadata (seed, git sha, library versions, sessions), checkpoints,
+TensorBoard events and eval summaries — a run is reconstructible from its
+directory alone. `uv run tensorboard --logdir trainer/runs` to watch.
 
 Evaluation is deterministic: same checkpoint + seed + track → identical
-trajectory, pinned in tests. Training is seeded and single-machine
-reproducible in practice on CPU; it is **not** claimed bit-identical across
-machines or library versions. See SPEC §9.
+trajectory (pinned in tests). Training is seeded end-to-end and reproduces
+bit-identically on one machine (verified: two seed-0 runs → identical weights);
+it is **not** claimed bit-identical across machines or library versions. A
+resumed run is not bit-identical to an uninterrupted one — resume restores
+weights and the step counter, not mid-stream RNG state. See SPEC §9 and
+`trainer/README.md`.
 
 ## Status
 
-Slices 1–3 done: bootstrap, pure sim core (traction circle, tracks, raycasts,
-progress), Gymnasium env `ApexDrive-v0` with baseline policies. Next: PPO
-training (Slice 4). See SLICES.md.
+Slices 1–4 done: bootstrap, pure sim core (traction circle, tracks, raycasts,
+progress), Gymnasium env `ApexDrive-v0` with baseline policies, PPO training
+with reconstructible run directories, checkpoint/resume and TensorBoard. The
+baseline agent laps Track A cleanly in ~16.3 s after ~1M steps
+([TUNING_LOG.md](TUNING_LOG.md)). Next: trajectory export + the replay app
+(Slice 5). See SLICES.md.
 
 ## License
 
