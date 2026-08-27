@@ -5,10 +5,12 @@ on:
   push:
     branches: [main]
 
-# One run per branch/PR at a time; a new push cancels the stale in-progress run.
+# One run per PR at a time; a new push to a PR cancels its stale in-progress run.
+# Pushes to main never cancel each other: every commit on main gets a complete
+# verdict (two quick squash-merges in a row would otherwise cancel the first).
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
