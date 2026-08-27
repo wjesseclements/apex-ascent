@@ -151,6 +151,11 @@ def train(args: TrainArgs) -> TrainResult:
         else:
             model = build_ppo(vec_env, ppo_cfg, seed)
 
+        # SB3's csv format rewrites progress.csv; keep the previous session's copy so
+        # the run stays fully reconstructible (TensorBoard events accumulate anyway).
+        prev_csv = paths.tb_dir / "progress.csv"
+        if prev_csv.exists():
+            prev_csv.rename(paths.tb_dir / f"progress_until_{resumed_from}.csv")
         formats = ["tensorboard", "csv"] + (["stdout"] if args.log_stdout else [])
         model.set_logger(configure(str(paths.tb_dir), formats))
 
