@@ -185,3 +185,22 @@ def signed_area(track: Track) -> float:
     c = track.centerline
     n = len(c)
     return 0.5 * sum(c[i][0] * c[(i + 1) % n][1] - c[(i + 1) % n][0] * c[i][1] for i in range(n))
+
+
+def point_at_arc(track: Track, s: float) -> tuple[Vec2, int]:
+    """Centerline point at arc length ``s`` (any real; wrapped into [0, L)).
+
+    Returns the point and the index of the segment it lies on. Useful for
+    scripted paths and tests; O(n) — not for the hot loop.
+    """
+    n = len(track.centerline)
+    L = track.total_length
+    s = s % L
+    i = 0
+    while i + 1 < n and track.segment_start[i + 1] <= s:
+        i += 1
+    frac = (s - track.segment_start[i]) / track.segment_lengths[i]
+    a = track.centerline[i]
+    d = track.directions[i]
+    seg_len = track.segment_lengths[i]
+    return (a[0] + d[0] * frac * seg_len, a[1] + d[1] * frac * seg_len), i
