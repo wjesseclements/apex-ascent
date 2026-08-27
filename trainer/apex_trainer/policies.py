@@ -8,6 +8,7 @@ policies (Slice 4) see only the observation.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Protocol
 
 import numpy as np
@@ -82,3 +83,21 @@ def make_policy(name: str) -> Policy:
     if name == "random-throttle":
         return RandomThrottlePolicy()
     raise ValueError(f"unknown policy {name!r}; choose from {', '.join(POLICY_NAMES)}")
+
+
+class CheckpointPolicy:
+    """A trained SB3 PPO checkpoint, run deterministically (mean action, no
+    exploration noise) — SPEC §6 evaluation."""
+
+    def __init__(self, checkpoint: Path, name: str | None = None) -> None:
+        from stable_baselines3 import PPO
+
+        self.model = PPO.load(checkpoint, device="cpu")
+        self.name = name or checkpoint.stem
+
+    def reset(self, seed: int | None) -> None:
+        return None
+
+    def act(self, obs: Obs, env: ApexDriveEnv) -> Act:
+        action, _ = self.model.predict(obs, deterministic=True)
+        return np.asarray(action, dtype=np.float32)

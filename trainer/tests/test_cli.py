@@ -41,9 +41,9 @@ def test_train_cli_smoke(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> 
     assert (tmp_path / "cli-smoke" / "config.json").exists()
 
 
-def test_evaluate_run_dir_form_is_reserved_for_slice_4(capsys: pytest.CaptureFixture[str]) -> None:
-    assert cli.evaluate(["runs/abc", "--checkpoint", "50000"]) == 2
-    assert "not implemented until Slice 4" in capsys.readouterr().err
+def test_evaluate_unknown_run_dir_fails_clearly() -> None:
+    with pytest.raises(FileNotFoundError, match="not a run directory"):
+        cli.evaluate(["runs/does-not-exist", "--checkpoint", "50000"])
 
 
 def test_evaluate_requires_a_policy_or_run_dir() -> None:

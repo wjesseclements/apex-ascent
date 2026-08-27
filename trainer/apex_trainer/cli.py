@@ -1,7 +1,6 @@
-"""Console entry points declared in pyproject.toml.
+"""Console entry points declared in pyproject.toml: ``train`` and ``evaluate``.
 
-``evaluate`` is real from Slice 3 (baseline policies); ``train`` and
-``tensorboard`` land in Slice 4 and say so until then (exit status 2).
+TensorBoard is the package's own script: ``uv run tensorboard --logdir runs``.
 """
 
 from __future__ import annotations
@@ -9,12 +8,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-_NOT_YET = "{name}: not implemented until Slice {slice} (see SLICES.md)"
-
-
-def _not_yet(name: str, slice_number: int) -> int:
-    print(_NOT_YET.format(name=name, slice=slice_number), file=sys.stderr)
-    return 2
+TRACK_A_DEFAULT = "track_a"
 
 
 def build_train_parser() -> argparse.ArgumentParser:
@@ -102,7 +96,12 @@ def build_evaluate_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--checkpoint", type=int, help="checkpoint step within run_dir (Slice 4)")
     p.add_argument("--policy", choices=POLICY_NAMES, help="baseline policy to evaluate")
-    p.add_argument("--track", default=TRACK_A, choices=available_tracks())
+    p.add_argument(
+        "--track",
+        default=None,
+        choices=available_tracks(),
+        help=f"default: the run's training track, or {TRACK_A} for --policy",
+    )
     p.add_argument("--episodes", type=int, default=3)
     p.add_argument("--seed", type=int, default=0, help="episode i uses seed + i")
     p.add_argument("--max-steps", type=int, default=None, help="cap below the env's 3600")
@@ -113,21 +112,45 @@ def evaluate(argv: list[str] | None = None) -> int:
     """Evaluate a policy deterministically and report per-episode stats."""
     parser = build_evaluate_parser()
     args = parser.parse_args(argv)
-    if args.run_dir is not None or args.checkpoint is not None:
-        return _not_yet("evaluate runs/<run_id>", 4)
+    if args.run_dir is not None and args.policy is not None:
+        parser.error("give either runs/<run_id> or --policy, not both")
+    if args.run_dir is None and args.checkpoint is not None:
+        parser.error("--checkpoint needs a runs/<run_id> argument")
+
+    from apex_trainer.evaluate import format_episode, format_summary, run_episode
+
+    if args.run_dir is not None:
+        from pathlib import Path
+
+        from apex_trainer.evaluate import evaluate_checkpoint
+        from apex_trainer.runs import open_run
+
+        out, stats, track = evaluate_checkpoint(
+            open_run(Path(args.run_dir)),
+            checkpoint_steps=args.checkpoint,
+            track=args.track,
+            episodes=args.episodes,
+            seed=args.seed,
+            max_steps=args.max_steps,
+        )
+        for i, st in enumerate(stats):
+            print(format_episode(i + 1, st))
+        print(format_summary(out.stem.split("-")[0].join(("ppo@", "")), track, stats))
+        print(f"wrote {out}")
+        return 0
     if args.policy is None:
         parser.error("either runs/<run_id> or --policy is required")
 
     from apex_trainer.env import ApexDriveEnv
-    from apex_trainer.evaluate import format_episode, format_summary, run_episode
     from apex_trainer.policies import make_policy
 
-    env = ApexDriveEnv(args.track)
+    track = args.track or TRACK_A_DEFAULT
+    env = ApexDriveEnv(track)
     policy = make_policy(args.policy)
     stats = []
     for i in range(args.episodes):
         st = run_episode(env, policy, seed=args.seed + i, max_steps=args.max_steps)
         stats.append(st)
         print(format_episode(i + 1, st))
-    print(format_summary(args.policy, args.track, stats))
+    print(format_summary(args.policy, track, stats))
     return 0

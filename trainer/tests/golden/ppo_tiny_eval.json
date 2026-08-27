@@ -1,0 +1,58 @@
+{
+  "recipe": {
+    "seed": 3,
+    "steps": 1024,
+    "ppo": {
+      "learning_rate": 0.0003,
+      "n_steps": 64,
+      "batch_size": 32,
+      "n_epochs": 2,
+      "gamma": 0.99,
+      "gae_lambda": 0.95,
+      "clip_range": 0.2,
+      "ent_coef": 0.0,
+      "vf_coef": 0.5,
+      "max_grad_norm": 0.5,
+      "net_arch": [
+        64,
+        64
+      ],
+      "device": "cpu",
+      "torch_threads": 1
+    },
+    "train": {
+      "n_envs": 2,
+      "vec_env": "dummy",
+      "checkpoint_interval": 1024
+    },
+    "eval_episodes": 2,
+    "eval_seed": 0,
+    "eval_max_steps": 600
+  },
+  "episodes": [
+    {
+      "steps": 600,
+      "crashed": false,
+      "truncated": true,
+      "laps": 0,
+      "lap_times": [],
+      "total_reward": 52.40270540126345,
+      "distance": 52.40270540126345,
+      "mean_drive": 0.16709769167006017,
+      "seed": 0,
+      "best_lap": null
+    },
+    {
+      "steps": 600,
+      "crashed": false,
+      "truncated": true,
+      "laps": 0,
+      "lap_times": [],
+      "total_reward": 52.40270540126345,
+      "distance": 52.40270540126345,
+      "mean_drive": 0.16709769167006017,
+      "seed": 1,
+      "best_lap": null
+    }
+  ]
+}

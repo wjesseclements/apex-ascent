@@ -226,8 +226,10 @@ class TrainConfig:
 
     n_envs: int = 8
     """Parallel envs (SPEC §6: 8–16). Deviates from SB3's single env for throughput."""
-    vec_env: str = "dummy"
-    """'dummy' (in-process) or 'subproc'. Default chosen by the Slice 4 benchmark."""
+    vec_env: str = "subproc"
+    """'subproc' (one process per env) or 'dummy' (in-process). Slice 4 benchmark on a
+    16-core M-series Mac: subproc 30k env steps/s at 8 envs vs dummy 14k (trainer/README.md).
+    16 envs only adds ~25 % and doubles samples per update, so n_envs stays 8."""
     checkpoint_interval: int = 50_000
     """Env steps between checkpoints (SPEC §6 default 50k)."""
 
