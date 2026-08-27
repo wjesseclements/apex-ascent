@@ -85,3 +85,18 @@ class RayConfig:
 
 
 DEFAULT_RAYS = RayConfig()
+
+
+@dataclass(frozen=True)
+class SimConfig:
+    """Everything the headless sim needs for one world (Slice 2). The Gymnasium env
+    (Slice 3) adds observation/reward/episode configs around this."""
+
+    physics: PhysicsConfig = DEFAULT_PHYSICS
+    rays: RayConfig = DEFAULT_RAYS
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"physics": self.physics.to_dict(), "rays": self.rays.to_dict()}
+
+
+DEFAULT_SIM = SimConfig()
