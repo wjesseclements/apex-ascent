@@ -7,12 +7,15 @@ requires-python = ">=3.11"
 license = "MIT"
 dependencies = [
     "gymnasium>=1.0",
+    "stable-baselines3>=2.9",
+    "tensorboard>=2.18",
+    "torch>=2.8",
 ]
 
 [project.scripts]
 train = "apex_trainer.cli:train"
 evaluate = "apex_trainer.cli:evaluate"
-tensorboard = "apex_trainer.cli:tensorboard"
+# `tensorboard` is the TensorBoard package's own console script: `uv run tensorboard --logdir runs`.
 
 [dependency-groups]
 dev = [
@@ -21,6 +24,16 @@ dev = [
     "pytest>=8.3",
     "ruff>=0.12",
 ]
+
+[tool.uv.sources]
+# CPU-only torch wheels on Linux (CI): the default index pulls ~2 GB of CUDA libs.
+# macOS arm64 wheels are CPU-only already. SPEC §6: compute is CPU only.
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [build-system]
 requires = ["hatchling"]

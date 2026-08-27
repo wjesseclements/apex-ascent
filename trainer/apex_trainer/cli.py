@@ -17,14 +17,73 @@ def _not_yet(name: str, slice_number: int) -> int:
     return 2
 
 
-def train() -> int:
-    """Train PPO on the driving env; lands in Slice 4."""
-    return _not_yet("train", 4)
+def build_train_parser() -> argparse.ArgumentParser:
+    from pathlib import Path
+
+    from apex_trainer.config import DEFAULT_TRAIN
+    from apex_trainer.runs import DEFAULT_RUNS_DIR
+    from apex_trainer.tracks import TRACK_A, available_tracks
+    from apex_trainer.train import VEC_ENV_KINDS
+
+    p = argparse.ArgumentParser(
+        prog="train",
+        description="Train PPO on ApexDrive-v0. --steps is a cumulative total: resuming a "
+        "500k run with --steps 2000000 trains 1.5M more.",
+    )
+    p.add_argument(
+        "--steps",
+        type=int,
+        required=True,
+        help="total env steps to reach (rounded up to a full rollout of n_steps × n_envs)",
+    )
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--track", default=TRACK_A, choices=available_tracks())
+    p.add_argument(
+        "--resume", type=Path, help="runs/<run_id> to continue (config from its snapshot)"
+    )
+    p.add_argument("--run-id", help="override the generated run id (new runs only)")
+    p.add_argument("--runs-dir", type=Path, default=DEFAULT_RUNS_DIR)
+    p.add_argument("--n-envs", type=int, default=DEFAULT_TRAIN.n_envs)
+    p.add_argument("--vec-env", choices=VEC_ENV_KINDS, default=DEFAULT_TRAIN.vec_env)
+    p.add_argument("--checkpoint-interval", type=int, default=DEFAULT_TRAIN.checkpoint_interval)
+    return p
 
 
-def tensorboard() -> int:
-    """Launch TensorBoard on the runs directory; lands in Slice 4."""
-    return _not_yet("tensorboard", 4)
+def train(argv: list[str] | None = None) -> int:
+    """Train PPO (Slice 4)."""
+    parser = build_train_parser()
+    args = parser.parse_args(argv)
+    from dataclasses import replace
+
+    from apex_trainer.config import DEFAULT_TRAIN
+    from apex_trainer.train import TrainArgs
+    from apex_trainer.train import train as run_training
+
+    train_cfg = replace(
+        DEFAULT_TRAIN,
+        n_envs=args.n_envs,
+        vec_env=args.vec_env,
+        checkpoint_interval=args.checkpoint_interval,
+    )
+    result = run_training(
+        TrainArgs(
+            steps=args.steps,
+            seed=args.seed,
+            track=args.track,
+            runs_dir=args.runs_dir,
+            run_id=args.run_id,
+            resume=args.resume,
+            train_cfg=train_cfg,
+        )
+    )
+    trained = result.steps_after - result.steps_before
+    print(
+        f"run {result.paths.run_id}: {result.steps_before} → {result.steps_after} steps "
+        f"({trained} this session) · {result.paths.root}"
+    )
+    if trained == 0:
+        print(f"nothing to do: run already has ≥ {args.steps} steps", file=sys.stderr)
+    return 0
 
 
 def build_evaluate_parser() -> argparse.ArgumentParser:
