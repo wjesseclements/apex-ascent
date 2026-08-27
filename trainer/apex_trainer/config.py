@@ -100,3 +100,78 @@ class SimConfig:
 
 
 DEFAULT_SIM = SimConfig()
+
+
+@dataclass(frozen=True)
+class ObservationConfig:
+    """Observation vector v0 (SPEC §4.1). Any change to the vector is a VERSION BUMP
+    of ``version``, not an edit — the string travels with every config snapshot and
+    trajectory file so checkpoints can never be fed a vector they weren't trained on.
+
+    Layout (16 floats, in order):
+      [0:12]  ray distances / rays.max_length            ∈ [0, 1], right → left
+      [12]    forward speed / physics.v_max              ∈ [0, 1]
+      [13]    lateral acceleration / traction_accel_max  ∈ [−1, 1]  (+ = left)
+      [14:16] previous applied action (steer, drive)     ∈ [−1, 1]
+    """
+
+    version: str = "v0"
+    """Bump on any change to the layout above (approved: element 13 is a_lat / A —
+    the slip signal trail-braking needs; SPEC §4.1's 'lateral speed' is superseded)."""
+
+    def size(self, rays: RayConfig) -> int:
+        return rays.count + 4
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class RewardConfig:
+    """Reward v0 (SPEC §5): dense progress + terminal crash penalty. No explicit time
+    term (discounting + progress-per-step already price time); no lap bonus (the GA
+    found it redundant; revisit only with evidence)."""
+
+    progress_scale: float = 1.0
+    """Reward per metre of centerline progress. 1.0 ⇒ a competent lap ≈ +440, a step
+    at 25 m/s ≈ +0.42 (SPEC §5 magnitude check)."""
+
+    crash_penalty: float = 10.0
+    """Subtracted on the crash step. Death must outweigh short-term greed: ~24 steps of
+    full-speed progress."""
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class EpisodeConfig:
+    """Episode rules (SPEC §3.4): crash terminates, laps don't, a step limit truncates."""
+
+    max_steps: int = 3600
+    """60 simulated seconds at 60 Hz — enough for two competent laps; multi-lap
+    episodes teach sustained pace."""
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class EnvConfig:
+    """Everything the Gymnasium env needs (Slice 3). PPO settings are separate (Slice 4)."""
+
+    sim: SimConfig = DEFAULT_SIM
+    observation: ObservationConfig = ObservationConfig()
+    reward: RewardConfig = RewardConfig()
+    episode: EpisodeConfig = EpisodeConfig()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "sim": self.sim.to_dict(),
+            "observation": self.observation.to_dict(),
+            "reward": self.reward.to_dict(),
+            "episode": self.episode.to_dict(),
+        }
+
+
+DEFAULT_ENV = EnvConfig()
