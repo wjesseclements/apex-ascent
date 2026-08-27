@@ -88,9 +88,11 @@ def test_scripted_driver_laps_both_tracks_without_crashing(any_track: Track) -> 
     assert w.laps >= 1
     assert len(w.lap_times) == w.laps
     # Lap times must be physically plausible: faster than a 10 m/s cruise, slower than
-    # the GA champion's 13.6 s (the scripted driver is deliberately conservative).
+    # the apex-evolve grip-20 reference (18.83 s on Track A, seed 42) — the scripted
+    # driver is deliberately conservative. (13.63 s in apex-evolve's FINDINGS is the
+    # no-grip-limit champion; not comparable to anything with a traction circle.)
     for lap in w.lap_times:
-        assert 13.6 < lap < any_track.total_length / 10.0
+        assert 18.83 < lap < any_track.total_length / 10.0
 
 
 def test_lap_accounting_on_the_start_line(track_a: Track) -> None:

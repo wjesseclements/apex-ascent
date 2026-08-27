@@ -5,7 +5,9 @@ description = "PPO trainer for apex-ascent: 2D car sim, Gymnasium env, SB3 train
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
-dependencies = []
+dependencies = [
+    "gymnasium>=1.0",
+]
 
 [project.scripts]
 train = "apex_trainer.cli:train"
