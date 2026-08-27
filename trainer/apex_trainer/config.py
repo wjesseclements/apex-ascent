@@ -10,6 +10,7 @@ PPO deviations from SB3 defaults (Slice 4).
 
 from __future__ import annotations
 
+import math
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -55,3 +56,32 @@ class PhysicsConfig:
 
 
 DEFAULT_PHYSICS = PhysicsConfig()
+
+
+@dataclass(frozen=True)
+class RayConfig:
+    """Raycast sensor fan (SPEC §4.1). Offsets are in geometry terms: CCW-positive,
+    so +half_fan is the car's LEFT and −half_fan its RIGHT (see ``apex_trainer.sim``)."""
+
+    count: int = 12
+    """SPEC §4.1: 12 rays — more than the GA's 7 for better track vision."""
+
+    half_fan: float = math.pi / 2
+    """rad: rays span −half_fan … +half_fan inclusive (SPEC: −90° … +90°)."""
+
+    max_length: float = 60.0
+    """m: readings clamp here (≈ 2 s of look-ahead at v_max; Track A's longest
+    straight is 80 m). Same value as apex-evolve so ray readings are comparable."""
+
+    def offsets(self) -> tuple[float, ...]:
+        """Evenly spaced offsets from −half_fan (right) to +half_fan (left)."""
+        if self.count < 2:
+            return (0.0,)
+        step = 2 * self.half_fan / (self.count - 1)
+        return tuple(-self.half_fan + i * step for i in range(self.count))
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+DEFAULT_RAYS = RayConfig()
