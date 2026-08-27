@@ -1,0 +1,38 @@
+[project]
+name = "apex-trainer"
+version = "0.1.0"
+description = "PPO trainer for apex-ascent: 2D car sim, Gymnasium env, SB3 training, trajectory export"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = []
+
+[project.scripts]
+train = "apex_trainer.cli:train"
+evaluate = "apex_trainer.cli:evaluate"
+tensorboard = "apex_trainer.cli:tensorboard"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.12",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["apex_trainer"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# E/F: pyflakes + pycodestyle; I: import sorting; UP: modern syntax; B: bugbear
+select = ["E", "F", "I", "UP", "B"]

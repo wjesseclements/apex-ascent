@@ -1,0 +1,5 @@
+/* Placeholder; design tokens + Tailwind arrive in PR 2. */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
