@@ -1,17 +1,11 @@
-"""Slice 1 placeholder: proves pytest is wired and the package imports.
+"""CLI stubs name the slice that implements them (replaced as slices land)."""
 
-Replaced by real sim tests in Slice 2.
-"""
+import pytest
 
-import apex_trainer
 from apex_trainer import cli
 
 
-def test_package_imports() -> None:
-    assert apex_trainer.__version__ == "0.1.0"
-
-
-def test_cli_stubs_report_their_slice(capsys) -> None:
+def test_cli_stubs_report_their_slice(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.train() == 2
     assert cli.evaluate() == 2
     assert cli.tensorboard() == 2
