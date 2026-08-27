@@ -1,0 +1,38 @@
+# --- Python / uv ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+
+# --- Training artifacts (runs are reconstructible but not committed wholesale;
+#     pinned golden checkpoints/trajectories are added explicitly with git add -f)
+trainer/runs/
+runs/
+
+# --- Node / Vite ---
+node_modules/
+app/dist/
+app/coverage/
+*.tsbuildinfo
+.vite/
+.eslintcache
+
+# --- Vercel ---
+.vercel/
+
+# --- Env / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
