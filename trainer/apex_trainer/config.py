@@ -175,3 +175,82 @@ class EnvConfig:
 
 
 DEFAULT_ENV = EnvConfig()
+
+
+@dataclass(frozen=True)
+class PPOConfig:
+    """PPO hyperparameters (SPEC §6): Stable-Baselines3 defaults, with every
+    deviation recorded here with its reason. Tuning is Slice 6 work with TensorBoard
+    evidence. First Slice 6 hypothesis: gamma 0.99 at 60 Hz is a ~1.7 s horizon."""
+
+    learning_rate: float = 3e-4
+    """SB3 default."""
+    n_steps: int = 2048
+    """Rollout length per env before each update. SB3 default."""
+    batch_size: int = 64
+    """SB3 default."""
+    n_epochs: int = 10
+    """SB3 default."""
+    gamma: float = 0.99
+    """Discount. SB3 default; flagged for Slice 6 (short horizon at 60 Hz)."""
+    gae_lambda: float = 0.95
+    """SB3 default."""
+    clip_range: float = 0.2
+    """SB3 default."""
+    ent_coef: float = 0.0
+    """SB3 default."""
+    vf_coef: float = 0.5
+    """SB3 default."""
+    max_grad_norm: float = 0.5
+    """SB3 default."""
+    net_arch: tuple[int, ...] = (64, 64)
+    """Hidden layers for both policy and value nets. SB3 MlpPolicy default."""
+    device: str = "cpu"
+    """SPEC §6: CPU only. Networks are tiny."""
+    torch_threads: int = 1
+    """Fixed thread count for the SPEC §9 single-machine reproducibility claim."""
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> PPOConfig:
+        d = dict(d)
+        d["net_arch"] = tuple(d["net_arch"])
+        return cls(**d)
+
+
+@dataclass(frozen=True)
+class TrainConfig:
+    """Training-loop plumbing (not hyperparameters)."""
+
+    n_envs: int = 8
+    """Parallel envs (SPEC §6: 8–16). Deviates from SB3's single env for throughput."""
+    vec_env: str = "dummy"
+    """'dummy' (in-process) or 'subproc'. Default chosen by the Slice 4 benchmark."""
+    checkpoint_interval: int = 50_000
+    """Env steps between checkpoints (SPEC §6 default 50k)."""
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> TrainConfig:
+        return cls(**d)
+
+
+def env_config_from_dict(d: dict[str, Any]) -> EnvConfig:
+    """Rebuild an EnvConfig from a config snapshot (inverse of EnvConfig.to_dict)."""
+    sim = SimConfig(
+        physics=PhysicsConfig(**d["sim"]["physics"]), rays=RayConfig(**d["sim"]["rays"])
+    )
+    return EnvConfig(
+        sim=sim,
+        observation=ObservationConfig(**d["observation"]),
+        reward=RewardConfig(**d["reward"]),
+        episode=EpisodeConfig(**d["episode"]),
+    )
+
+
+DEFAULT_PPO = PPOConfig()
+DEFAULT_TRAIN = TrainConfig()
