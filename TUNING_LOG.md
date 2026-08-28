@@ -103,3 +103,188 @@ subprocess envs. Single-machine claim only (SPEC §9).
 **Verdict:** baseline is strong enough that Slice 6's job is generalization
 and the trail-braking question, not "learn to lap". γ hypothesis stays queued
 but is no longer expected to matter for Track A lap time.
+
+---
+
+## Slice 6 — E5 (zero-cost part): what did the A-only baseline learn?
+
+**Run:** `slice4-baseline-s0` @ 5.01M, evaluated on tracks it never saw.
+
+| eval track | deterministic | 10 jittered episodes |
+|---|---|---|
+| track_a (trained) | 3 laps, best 16.18 s | 30/30 clean, 0 crashes, best 16.15 s |
+| track_a_mirror (A as left-handers) | crash at **264 m** (11.5 s) | 0/10 clean, 10/10 crash, 264 m |
+| track_b | crash at 271 m (11.6 s) | 0/10 clean, 10/10 crash, 271 m |
+
+**Verdict:** the failure on Track B is not "memorized Track A" — the mirror
+image of the *same* circuit fails at the same point, the first left-hand
+corner. The policy learned **right-handers only**: Track A contains no
+left-hander of any radius, so `steer < 0` at speed was never rewarded. Any
+generalization experiment must add left-handers to the training
+distribution (E5a: A + mirror; E5b: A + B, the labelled upper bound).
+
+## Slice 6 — experiment plan (hypotheses written before the runs)
+
+All runs: 5M steps, 8 subproc envs, checkpoints every 50k, seed 0 unless
+stated; the Slice 4 baseline config except for the one named change.
+Evaluation: the table from `uv run python -m apex_trainer.debug.summarize_runs`
+— latest checkpoint, each track, deterministic best lap + 10 jittered episodes.
+
+| id | change | hypothesis | success looks like |
+|---|---|---|---|
+| E1 | seeds 1, 2 (config unchanged) | Slice 4's result is the config, not the seed | all seeds: 30/30 clean on A under jitter, best lap within ~0.5 s of 16.2 s |
+| E2 | γ 0.99 → 0.995 | a ~3.3 s horizon lets it brake *for* corners rather than react | best lap improves beyond E1's seed spread, or brake usage appears |
+| E3 | ent_coef 0 → 0.01 | keeping exploration alive avoids the σ collapse and the 0↔1 rollout crash-rate oscillation | smoother rollout crash rate, no lap-time cost |
+| E4 | train with start jitter | robustness at the start line, maybe small lap-time cost | jittered clean-lap rate unchanged (already 30/30) — so "no cost" is the win |
+| E5a | tracks = A + A-mirror | left-handers in the distribution ⇒ Track B becomes drivable | laps on B; A lap time within seed spread |
+| E5b | tracks = A + B (labelled upper bound) | ceiling for "how good can B get with this budget" | clean laps on B; reported as trained-on-B, never as generalization |
+
+Stop rule: a change that is not outside E1's seed-to-seed spread is "no
+effect" and is not extended. The winner gets one ~20M overnight run.
+
+## E1 — repeatability across seeds (result)
+
+Runs: `e1-baseline-s1` (751 s), `e1-baseline-s2` (762 s), config identical to
+`slice4-baseline-s0`.
+
+| run | steps | track_a det | track_a jitter×10 | track_a_mirror det | track_a_mirror jitter×10 | track_b det | track_b jitter×10 |
+|---|---|---|---|---|---|---|---|
+| slice4-baseline-s0 | 5.01M | 3 laps, best 16.18 s | 30/30 clean, 0/10 crash, best 16.15 s | crash @ 264 m | 0/10 clean, 10/10 crash | crash @ 271 m | 0/10 clean, 10/10 crash |
+| e1-baseline-s1 | 5.01M | 3 laps, best 16.15 s | 30/30 clean, 0/10 crash, best 16.15 s | 3 laps, best 16.60 s | 30/30 clean, 0/10 crash, best 16.58 s | crash @ 194 m | 0/10 clean, 10/10 crash |
+| e1-baseline-s2 | 5.01M | 3 laps, best 16.02 s | 30/30 clean, 0/10 crash, best 16.02 s | crash @ 234 m | 0/10 clean, 10/10 crash | crash @ 254 m | 0/10 clean, 10/10 crash |
+
+**Verdict on repeatability:** the Track A result is the config, not the seed —
+three seeds, 90/90 clean jittered laps, best laps 16.02 / 16.15 / 16.18 s
+(spread 0.16 s). That is the *seed-to-seed spread* the stop rule uses.
+
+**Correction to the E5 zero-cost verdict above:** "learned right-handers
+only" was too strong. Seed 1 drives the mirrored circuit cleanly (30/30, best
+16.60 s — 0.45 s slower than its Track A lap) without ever having seen a
+left-hander; seeds 0 and 2 crash at the first one. Whether a policy's
+steering generalizes across handedness is **seed-dependent** with this
+config — which is itself a finding for FINDINGS.md: the observation (rays +
+speed + a_lat + previous action) contains the information, and some runs
+learn a symmetric enough mapping to use it. None of the three laps Track B
+(crashes at 194–271 m), so B needs more than handedness.
+
+## E2–E5b — results (all 5.01M steps, seed 0, ~12 min each)
+
+| run | steps | track_a det | track_a jitter×10 | track_a_mirror det | track_a_mirror jitter×10 | track_b det | track_b jitter×10 |
+|---|---|---|---|---|---|---|---|
+| e2-gamma0995 | 5.01M | 3 laps, best 15.93 s | 30/30 clean, 0/10 crash, best 15.90 s | crash @ 270 m | 6/16 clean, 10/10 crash, best 16.48 s | crash @ 306 m | 18/22 clean, 4/10 crash, best 18.83 s |
+| e3-entcoef001 | 5.01M | 3 laps, best 16.25 s | 30/30 clean, 0/10 crash, best 16.23 s | crash @ 274 m | 4/14 clean, 10/10 crash, best 18.17 s | crash @ 272 m | 0/10 clean, 10/10 crash |
+| e4-trainjitter | 5.01M | crash @ 660 m | 10/20 clean, 10/10 crash, best 17.63 s | crash @ 261 m | 0/10 clean, 10/10 crash | crash @ 199 m | 0/10 clean, 10/10 crash |
+| e5a-a-plus-mirror | 5.01M | 3 laps, best 15.93 s | 30/30 clean, 0/10 crash, best 15.90 s | 3 laps, best 16.37 s | 30/30 clean, 0/10 crash, best 16.32 s | crash @ 210 m | 0/10 clean, 10/10 crash |
+| e5b-a-plus-b | 5.01M | crash @ 602 m | 10/20 clean, 10/10 crash, best 17.80 s | crash @ 704 m | 10/20 clean, 10/10 crash, best 17.75 s | 3 laps, best 18.13 s | 30/30 clean, 0/10 crash, best 18.10 s |
+
+Reference (E1 seed spread on Track A): best lap 16.02–16.18 s, 30/30 clean.
+
+**E2 γ = 0.995 — positive, on two axes.** Track A best lap **15.93 s**
+(0.09 s beyond the best seed; small but outside the spread), and — unexpected —
+the only single-track run that partially generalizes to Track B: deterministic
+start crashes at 306 m, but under start jitter **18/22 clean laps, 4/10
+crashes, best 18.83 s**. The longer horizon changes *what* the policy learns
+about corners, not just how fast it goes. Note how fragile the deterministic
+number is here: one fixed start crashes, most jittered starts lap.
+
+**E3 ent_coef = 0.01 — no effect** on Track A (16.25 s, within spread), no
+generalization. Entropy stayed higher, as intended, but nothing downstream
+changed. Not extended.
+
+**E4 training with start jitter — negative at this budget, for an
+instructive reason.** Track A deterministic eval crashes at 660 m; jittered
+10/20 clean. The curve does NOT lag: rollout distance reaches 1569 m by 851k
+steps, same as the baseline — then destabilizes after ~3.3M (rollout crash
+rate 0.5–0.75 over the final rollouts, distance falling to ~1100 m). The
+*final* checkpoint is a bad one; see the checkpoint sweep below. Lesson for
+the competence pick: choose a checkpoint by evaluation across checkpoints,
+not "latest".
+
+**E5a tracks = A + mirror — positive.** Track A **15.93 s** (same as E2),
+mirror 30/30 clean at 16.37 s; but Track B still crashes at 210 m. So
+left-handers were the *first* missing ingredient, not the last — Track B's
+corner sequence (its tighter, longer combinations) is a second one.
+
+**E5b tracks = A + B (labelled upper bound) — B is learnable:** 30/30 clean on
+B, best **18.13 s** — but Track A regresses (deterministic crash at 602 m,
+10/20 jittered). Two circuits compete for a [64, 64] network in 5M steps.
+Reported as trained-on-B, never as generalization.
+
+**Follow-up 1 (E6):** γ 0.995 + A + mirror — the two positives combined —
+5M steps, before choosing the overnight config.
+
+### E4 checkpoint sweep (Track A; deterministic | 5 jittered episodes)
+
+| ckpt | deterministic | jittered |
+|---|---|---|
+| 0.5M | 3 laps, 16.85 s | 15/15 clean |
+| 1.0M | crash @ 264 m | 0/5 clean |
+| 1.5M | 3 laps, 16.35 s | 15/15 clean |
+| 2.0M | 3 laps, 16.38 s | 15/15 clean |
+| 2.5M | crash @ 658 m | 8/13 clean |
+| 3.0M | 3 laps, 16.35 s | 15/15 clean |
+| 3.5M | crash @ 95 m | 2/7 clean |
+| 4.0M | **3 laps, 16.17 s** | **15/15 clean** |
+| 4.5M | 3 laps, 16.37 s | 15/15 clean |
+| 5.0M | crash @ 1100 m | 7/12 clean |
+| 5.01M (final) | crash @ 660 m | 5/10 clean |
+
+The policy alternates between excellent and crashing from one 500k window to
+the next: the Slice 4 "stochastic rollout crash-rate oscillation" is not
+cosmetic — under jittered training it reaches the deterministic policy. Two
+consequences adopted from here on: (1) the competence checkpoint is chosen by
+a **checkpoint sweep under jitter** (`uv run python -m
+apex_trainer.debug.select_checkpoint`), never "latest"; (2) the 20M overnight
+run is judged the same way. Whether the oscillation itself can be damped
+(smaller learning rate late, larger batch) is a queued hypothesis, not a
+Slice 6 deliverable.
+
+### Checkpoint sweeps on the two positive runs (jitter, every 500k)
+
+- **E5a (A + mirror) on Track A:** best checkpoint 3.5M — 100 % clean, **15.83 s**
+  (final 5.01M: 15.92 s). Every sampled checkpoint from 1M on is 100 % clean:
+  the two-track run is *more* stable than E4, not less.
+- **E2 (γ 0.995, A only) on Track B:** best checkpoint **3.5M — 100 % clean
+  (5/5 episodes, 0 crashes), best 18.93 s**; 1M, 2M and 4.5M also 100 %; the
+  final 5.01M is the outlier at 4/10 crashes. So the headline "partial
+  generalization" above was a checkpoint-selection artefact: **a policy trained
+  only on Track A, with γ = 0.995, drives Track B cleanly.** Full row for that
+  checkpoint:
+
+| E2 γ=0.995 @ 3.50M | deterministic | 10 jittered episodes |
+|---|---|---|
+| track_a | 3 laps, best 16.15 s | 30/30 clean, 0/10 crash, best 16.13 s |
+| track_a_mirror | 3 laps, best 16.60 s | 30/30 clean, 0/10 crash, best 16.58 s |
+| track_b | 3 laps, best 18.93 s | 30/30 clean, 0/10 crash, best 18.93 s |
+
+This is the Slice 6 generalization result FINDINGS.md should lead with —
+train-on-A-only, as approved — with E5a/E5b as the labelled secondary rows.
+Why γ and not the track mix? A 3.3 s horizon values "slow down before the
+corner you cannot see the exit of" over "gain 0.4 m this tick", and that
+policy is track-agnostic; the mirror mix teaches left-handers but nothing
+about unfamiliar corner *sequences*.
+
+## E6 — γ 0.995 + A + mirror (follow-up 1, result)
+
+| track | deterministic @5.01M | jittered ×10 | best checkpoint (sweep) |
+|---|---|---|---|
+| track_a | 3 laps, 16.52 s | 30/30 clean, 16.50 s | 4.0M: 16.42 s |
+| track_a_mirror | 3 laps, 16.62 s | 30/30 clean, 16.60 s | — |
+| track_b | crash @ 203 m | 3/13 clean, 10/10 crash | only 0.5M laps it (19.63 s); 4.5M–5M crash |
+
+**Verdict: the combination is worse than either part.** Track A 0.6 s slower
+than E2/E5a, and the Track B generalization that E2 shows at 3.5M is gone
+(only the very early 0.5M checkpoint laps B). Adding the mirror track to the
+γ 0.995 run spends capacity on left-handers it would otherwise have spent on
+the corner-approach behaviour that transfers. Not extended.
+
+## Decision: the overnight config is E2 (γ 0.995, Track A only)
+
+By the approved criteria (clean-lap rate under jitter, then best lap) E2 and
+E5a tie on Track A: 100 % both, 15.90 vs 15.83 s — a 0.07 s gap inside the
+0.16 s seed spread, i.e. "no effect" by the stop rule. The tiebreaker is
+what the rest of the project needs: E2 is the only configuration whose
+policy drives all three tracks cleanly from Track-A-only training. **E7:**
+`e7-gamma0995-20m` — γ 0.995, seed 0, 20M steps (4× the budget) — judged by
+checkpoint sweep, not the final checkpoint. Provisional competence checkpoint
+until E7 is evaluated: **E2 @ 3.5M**.
