@@ -13,9 +13,10 @@ import scriptedA from './__fixtures__/parity-scripted-track_a.json';
 import scriptedMirror from './__fixtures__/parity-scripted-track_a_mirror.json';
 import scriptedB from './__fixtures__/parity-scripted-track_b.json';
 import ppoA from './__fixtures__/parity-ppo-track_a.json';
+import scriptedLowDrag from './__fixtures__/parity-scripted-track_a-low-drag.json';
 import { getTrack } from '../../data/tracks';
 import type { PhysicsConfig, RayConfig } from './config';
-import { DEFAULT_PHYSICS, DEFAULT_RAYS } from './config';
+import { DEFAULT_RAYS, PHYSICS_PRESETS, type PhysicsPresetId } from './config';
 import { observe } from './observation';
 import { reset, sense, step } from './world';
 
@@ -28,6 +29,7 @@ export const OBS_TOL = 1e-6;
 interface Tape {
   policy: string;
   track: string;
+  physicsPreset: PhysicsPresetId;
   physics: PhysicsConfig;
   rays: RayConfig;
   physicsConfigHash: string;
@@ -52,15 +54,17 @@ const TAPES: [string, Tape][] = [
   ['scripted · track_a_mirror (600)', scriptedMirror as Tape],
   ['scripted · track_b (600)', scriptedB as Tape],
   ['ppo@8M · track_a (1800)', ppoA as Tape],
+  ['scripted · track_a · low-drag (900)', scriptedLowDrag as Tape],
 ];
 
 describe.each(TAPES)('parity: %s', (_name, tape) => {
   const track = getTrack(tape.track);
 
-  it('fixture carries the default physics', () => {
-    expect(tape.physics).toEqual(DEFAULT_PHYSICS);
+  it('fixture carries the named physics preset and its hash (pinned on both sides)', () => {
+    const preset = PHYSICS_PRESETS[tape.physicsPreset];
+    expect(tape.physics).toEqual(preset.physics);
+    expect(tape.physicsConfigHash).toBe(preset.hash);
     expect(tape.rays).toEqual(DEFAULT_RAYS);
-    expect(tape.physicsConfigHash).toBe('fc40dfb0b2c9');
   });
 
   it('replays the tape within tolerances at every tick', () => {

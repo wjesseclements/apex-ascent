@@ -40,3 +40,12 @@ export function rayOffsets(cfg: RayConfig): number[] {
   const step = (2 * cfg.half_fan) / (cfg.count - 1);
   return Array.from({ length: cfg.count }, (_, i) => -cfg.half_fan + i * step);
 }
+
+/** Named physics presets — the TS mirror of `PHYSICS_PRESETS` in config.py, hashes pinned by tests. */
+export type PhysicsPresetId = 'default' | 'low-drag' | 'no-drag';
+
+export const PHYSICS_PRESETS: Record<PhysicsPresetId, { physics: PhysicsConfig; hash: string }> = {
+  default: { physics: DEFAULT_PHYSICS, hash: 'fc40dfb0b2c9' },
+  'low-drag': { physics: { ...DEFAULT_PHYSICS, drag: 0.05 }, hash: 'f9155cc74c98' },
+  'no-drag': { physics: { ...DEFAULT_PHYSICS, drag: 0 }, hash: '43baf62c8a0e' },
+};

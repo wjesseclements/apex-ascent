@@ -19,22 +19,24 @@ from typing import Any
 
 import numpy as np
 
-from apex_trainer.config import DEFAULT_ENV
+from apex_trainer.config import env_config_with_physics
 from apex_trainer.env import ApexDriveEnv
 from apex_trainer.policies import CheckpointPolicy, Policy, make_policy
 from apex_trainer.trajectory import physics_config_hash
 
-TAPES: list[tuple[str, str, int]] = [
-    ("scripted", "track_a", 1800),
-    ("scripted", "track_a_mirror", 600),
-    ("scripted", "track_b", 600),
-    ("ppo", "track_a", 1800),
+TAPES: list[tuple[str, str, int, str]] = [
+    ("scripted", "track_a", 1800, "default"),
+    ("scripted", "track_a_mirror", 600, "default"),
+    ("scripted", "track_b", 600, "default"),
+    ("ppo", "track_a", 1800, "default"),
+    ("scripted", "track_a", 900, "low-drag"),
 ]
 PPO_CHECKPOINT = Path("runs/e7-gamma0995-20m/checkpoints/ppo_8000000_steps.zip")
 
 
-def record_tape(policy: Policy, track: str, ticks: int) -> dict[str, Any]:
-    env = ApexDriveEnv(track, DEFAULT_ENV)
+def record_tape(policy: Policy, track: str, ticks: int, preset: str = "default") -> dict[str, Any]:
+    env_cfg = env_config_with_physics(preset)
+    env = ApexDriveEnv(track, env_cfg)
     obs, info = env.reset(seed=0)
     w = env.world
     initial = {"x": w.car.x, "y": w.car.y, "heading": w.car.heading, "speed": w.car.speed}
@@ -63,10 +65,11 @@ def record_tape(policy: Policy, track: str, ticks: int) -> dict[str, Any]:
     return {
         "policy": policy.name,
         "track": track,
-        "physics": DEFAULT_ENV.sim.physics.to_dict(),
-        "rays": DEFAULT_ENV.sim.rays.to_dict(),
-        "physicsConfigHash": physics_config_hash(DEFAULT_ENV),
-        "startSpeed": DEFAULT_ENV.sim.physics.start_speed,
+        "physicsPreset": preset,
+        "physics": env_cfg.sim.physics.to_dict(),
+        "rays": env_cfg.sim.rays.to_dict(),
+        "physicsConfigHash": physics_config_hash(env_cfg),
+        "startSpeed": env_cfg.sim.physics.start_speed,
         "initial": initial,
         "ticks": len(actions),
         "actions": actions,
@@ -81,14 +84,15 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--ppo-checkpoint", type=Path, default=PPO_CHECKPOINT)
     args = p.parse_args(argv)
     args.out.mkdir(parents=True, exist_ok=True)
-    for name, track, ticks in TAPES:
+    for name, track, ticks, preset in TAPES:
         policy: Policy = (
             CheckpointPolicy(args.ppo_checkpoint, name="ppo@8000000")
             if name == "ppo"
             else make_policy("scripted")
         )
-        tape = record_tape(policy, track, ticks)
-        out = args.out / f"parity-{name}-{track}.json"
+        tape = record_tape(policy, track, ticks, preset)
+        suffix = "" if preset == "default" else f"-{preset}"
+        out = args.out / f"parity-{name}-{track}{suffix}.json"
         out.write_text(json.dumps(tape, separators=(",", ":")) + "\n", encoding="utf-8")
         print(f"wrote {out.name}: {tape['ticks']} ticks, crashed={tape['expected']['crashed'][-1]}")
     return 0
