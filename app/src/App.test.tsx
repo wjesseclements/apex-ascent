@@ -1,13 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import { App } from './App';
+import { useTransport } from './store/transport';
 
 describe('App', () => {
-  it('renders the placeholder page with headline and token swatches', () => {
-    render(<App />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      'A PPO agent learns to drive.',
-    );
-    expect(screen.getByRole('list', { name: /design tokens/i })).toBeInTheDocument();
-    expect(screen.getByText('--color-accent')).toBeInTheDocument();
+  it('renders the replay layout without autoloading in tests', () => {
+    useTransport.setState({ trajectory: null, trajectoryName: null, track: null, loadError: null });
+    render(<App autoload={false} />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Watch the policy drive.');
+    expect(screen.getByRole('img', { name: 'track replay' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /PPO @ 5M steps · Track A/ })).toBeInTheDocument();
+    expect(screen.getByLabelText('open trajectory file')).toBeInTheDocument();
   });
 });
