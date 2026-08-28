@@ -49,6 +49,12 @@ def build_train_parser() -> argparse.ArgumentParser:
     exp.add_argument("--gamma", type=float, help="PPO discount (default 0.99)")
     exp.add_argument("--ent-coef", type=float, help="PPO entropy coefficient (default 0.0)")
     exp.add_argument(
+        "--physics",
+        choices=("default", "low-drag", "no-drag"),
+        default="default",
+        help="physics preset (Slice 8a): low-drag (0.05/s) or no-drag; default = SPEC car",
+    )
+    exp.add_argument(
         "--train-jitter",
         action="store_true",
         help="train with the same start jitter evaluation uses (speed ±1, lateral ±1.5, ±5°)",
@@ -62,7 +68,7 @@ def train(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     from dataclasses import replace
 
-    from apex_trainer.config import DEFAULT_ENV, DEFAULT_EVAL_JITTER, DEFAULT_PPO, DEFAULT_TRAIN
+    from apex_trainer.config import DEFAULT_EVAL_JITTER, DEFAULT_PPO, DEFAULT_TRAIN
     from apex_trainer.train import TrainArgs
     from apex_trainer.train import train as run_training
 
@@ -79,10 +85,12 @@ def train(argv: list[str] | None = None) -> int:
         ppo_cfg = replace(ppo_cfg, gamma=args.gamma)
     if args.ent_coef is not None:
         ppo_cfg = replace(ppo_cfg, ent_coef=args.ent_coef)
-    env_cfg = DEFAULT_ENV
+    from apex_trainer.config import env_config_with_physics
+
+    env_cfg = env_config_with_physics(args.physics)
     if args.train_jitter:
         env_cfg = replace(
-            DEFAULT_ENV, episode=replace(DEFAULT_ENV.episode, start_jitter=DEFAULT_EVAL_JITTER)
+            env_cfg, episode=replace(env_cfg.episode, start_jitter=DEFAULT_EVAL_JITTER)
         )
     result = run_training(
         TrainArgs(
@@ -132,6 +140,12 @@ def build_evaluate_parser() -> argparse.ArgumentParser:
     p.add_argument("--episodes", type=int, default=3)
     p.add_argument("--seed", type=int, default=0, help="episode i uses seed + i")
     p.add_argument("--max-steps", type=int, default=None, help="cap below the env's 3600")
+    p.add_argument(
+        "--physics",
+        choices=("default", "low-drag", "no-drag"),
+        default="default",
+        help="physics preset for --policy baselines (runs/<id> always use their snapshot)",
+    )
     p.add_argument(
         "--jitter",
         action="store_true",

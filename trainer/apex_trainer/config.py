@@ -11,7 +11,7 @@ PPO deviations from SB3 defaults (Slice 4).
 from __future__ import annotations
 
 import math
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import Any
 
 
@@ -56,6 +56,23 @@ class PhysicsConfig:
 
 
 DEFAULT_PHYSICS = PhysicsConfig()
+
+# --- Physics presets (Slice 8a). The DEFAULT is the SPEC's car; the others are named
+# experiment configs with their own physicsConfigHash. Existing pins are on the default
+# and never move; each experiment preset gets its own golden pin (testing rule 3).
+LOW_DRAG_PHYSICS = replace(DEFAULT_PHYSICS, drag=0.05)
+"""drag 0.05/s ≈ 1.5 m/s² at 30 m/s: coasting from 30 → 22 m/s takes ~6 s, so slowing
+for a corner REQUIRES braking. Under the default 0.3/s, drag is a free 9 m/s² brake and
+Slice 7 found no policy ever braked; this preset makes the trail-braking question bite."""
+
+NO_DRAG_PHYSICS = replace(DEFAULT_PHYSICS, drag=0.0)
+"""The pure-traction-circle limit: every deceleration must come from the brakes."""
+
+PHYSICS_PRESETS: dict[str, PhysicsConfig] = {
+    "default": DEFAULT_PHYSICS,
+    "low-drag": LOW_DRAG_PHYSICS,
+    "no-drag": NO_DRAG_PHYSICS,
+}
 
 
 @dataclass(frozen=True)
@@ -297,3 +314,10 @@ def env_config_from_dict(d: dict[str, Any]) -> EnvConfig:
 
 DEFAULT_PPO = PPOConfig()
 DEFAULT_TRAIN = TrainConfig()
+
+
+def env_config_with_physics(preset: str) -> EnvConfig:
+    """DEFAULT_ENV with a named physics preset (raises on unknown names)."""
+    if preset not in PHYSICS_PRESETS:
+        raise ValueError(f"unknown physics preset {preset!r}; choose from {list(PHYSICS_PRESETS)}")
+    return replace(DEFAULT_ENV, sim=replace(DEFAULT_SIM, physics=PHYSICS_PRESETS[preset]))
