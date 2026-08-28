@@ -3,10 +3,13 @@
  * Read once on mount; unknown values are ignored (never trusted blindly).
  */
 import { MODELS } from './models';
+import { findPreset } from './presets';
 import { TRACK_IDS } from './tracks';
 import { useLive } from '../store/live';
 
 export interface DeepLink {
+  /** A gallery preset id (see presets.ts), applied by the Gallery on mount. */
+  preset?: string;
   mode?: 'replay' | 'live';
   trackId?: string;
   modelId?: string;
@@ -18,7 +21,9 @@ export function parseDeepLink(search: string): DeepLink {
   const mode = q.get('mode');
   const track = q.get('track');
   const model = q.get('model');
+  const preset = q.get('preset');
   return {
+    preset: preset && findPreset(preset) ? preset : undefined,
     mode: mode === 'live' || mode === 'replay' ? mode : undefined,
     trackId: track && TRACK_IDS.includes(track) ? track : undefined,
     modelId: model && MODELS.some((m) => m.id === model) ? model : undefined,

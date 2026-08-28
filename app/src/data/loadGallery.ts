@@ -3,6 +3,7 @@ import { findEntry, parseGalleryManifest, type GalleryManifest } from '../engine
 import { parseTrajectory, type Trajectory } from '../engine/schema';
 import { useTransport } from '../store/transport';
 import { GALLERIES, type GalleryRef } from './galleries';
+import type { Preset } from './presets';
 
 export function galleryRef(id: string): GalleryRef {
   const ref = GALLERIES.find((g) => g.id === id);
@@ -95,4 +96,14 @@ export async function loadLanding(
   await focusCheckpoint(manifest, ref, focusStep, trackId);
   for (const step of ghostSteps) await ghostCheckpoint(manifest, ref, step, trackId);
   return manifest;
+}
+
+/** Load a preset: switch gallery, focus its checkpoint on its track, add its ghosts. */
+export async function loadPreset(preset: Preset): Promise<GalleryManifest> {
+  return loadLanding(
+    galleryRef(preset.galleryId),
+    preset.trackId,
+    preset.focusStep,
+    preset.ghostSteps,
+  );
 }
