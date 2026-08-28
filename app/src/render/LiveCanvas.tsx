@@ -32,6 +32,8 @@ import { TRAIL_SECONDS, drawScene } from './scene';
 const PADDING_PX = 24;
 export const MAX_TICKS_PER_FRAME = 4;
 export const MAX_TICKS = 3600;
+/** How often the live recording is re-published to the transport store (HUD/g-g sync). */
+export const RECORDING_PUSH_MS = 1000;
 
 export interface LiveCanvasProps {
   /** Injected for tests; defaults to onnxruntime-web. */
@@ -119,6 +121,7 @@ export function LiveCanvas({ loadPolicy = loadOrtPolicy }: LiveCanvasProps) {
     let lapsSeen = 0;
     let rateTicks = 0;
     let rateSince = 0;
+    let lastPushMs = 0;
     const dt = preset.physics.dt;
 
     const frame = async (nowMs: number) => {
@@ -141,8 +144,10 @@ export function LiveCanvas({ loadPolicy = loadOrtPolicy }: LiveCanvasProps) {
           rateTicks++;
         }
         if (acc > dt * MAX_TICKS_PER_FRAME) acc = 0; // fell behind: drop time, never fast-forward
-        if (session.world.laps > lapsSeen) {
+        // keep the HUD's lap list and the g-g metrics on the live car: at each lap and at 1 Hz
+        if (session.world.laps > lapsSeen || nowMs - lastPushMs >= RECORDING_PUSH_MS) {
           lapsSeen = session.world.laps;
+          lastPushMs = nowMs;
           pushRecording();
         }
         if (rateSince === 0) rateSince = nowMs;

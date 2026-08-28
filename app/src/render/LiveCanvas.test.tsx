@@ -59,6 +59,10 @@ describe('LiveCanvas', () => {
     // the 100 ms frame left 33 ms in the accumulator; a 16.7 ms frame then runs 3 ticks
     await runFrame(1116.7);
     expect(getSnapshot()!.index).toBe(MAX_TICKS_PER_FRAME + 3);
+    // the recording is re-published at 1 Hz so the HUD follows the live car
+    const before = selectTrajectory(useTransport.getState())!.meta.sampleCount;
+    await runFrame(2200);
+    expect(selectTrajectory(useTransport.getState())!.meta.sampleCount).toBeGreaterThan(before);
   });
   it('stops on crash, records the run into the transport store, and reports the status', async () => {
     render(<LiveCanvas loadPolicy={async () => straight} />);
