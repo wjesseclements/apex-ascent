@@ -21,7 +21,7 @@ export default defineConfig({
       enabled: true,
       provider: 'v8',
       include: ['src/engine/**/*.ts'],
-      exclude: ['src/engine/**/*.test.ts', 'src/engine/__fixtures__/**'],
+      exclude: ['src/engine/**/*.test.ts', 'src/engine/**/__fixtures__/**'],
       thresholds: { perFile: true, lines: 90, branches: 90, functions: 90, statements: 90 },
       reporter: ['text-summary'],
     },
