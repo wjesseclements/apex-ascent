@@ -64,7 +64,8 @@ export function App({ autoload = true }: { autoload?: boolean }) {
           <Hud />
           <GgWidget />
           <CarList />
-          <Gallery autoload={autoload} initialPreset={link.preset} />
+          {/* a live deep link must not have the gallery's landing state overwrite the live car */}
+          <Gallery autoload={autoload && link.mode !== 'live'} initialPreset={link.preset} />
           <TrajectoryPicker />
         </aside>
       </div>
