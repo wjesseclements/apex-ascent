@@ -498,3 +498,14 @@ The headline answer is therefore not "yes" or "no" but **"whenever braking is
 worth the grip"** — which is a statement about the environment's economics
 that the agent read correctly in all three cases. FINDINGS.md (Slice 9)
 leads with this table.
+
+---
+
+## Closing note (Slice 9)
+
+Nine slices, 41 pull requests, 13 training runs on the record. The instrument
+that mattered most was not a hyperparameter but a table with a control row
+and a checkpoint sweep. What this log did not test, in order of how much it
+might change the story: late learning-rate decay against the checkpoint
+instability; a continuous trail-braking measure instead of thresholds; a
+finer γ sweep; more seeds for the low-drag runs; a second car model.

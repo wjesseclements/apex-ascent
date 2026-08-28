@@ -96,7 +96,10 @@ a low-drag car (0.05/s, a named preset with its own pins and hash) the same
 algorithm **discovers trail-braking**: 22–32 % of ticks braking, 14–21 %
 braking while cornering, ~10 brake events per lap, across two seeds. Both
 cars can be driven live (`?mode=live&model=e8a-lowdrag-5m&autostart=1`).
-Details and every run in TUNING_LOG. Next: FINDINGS and polish (Slice 9).
+Details and every run in TUNING_LOG; the write-up is [FINDINGS.md](FINDINGS.md).
+Presets in the app: **Show the flip**, **The ladder**, **Now it brakes**
+(`?preset=flip`); blog-ready clips in `docs/media/blog/` are rendered from the
+trajectory data by `uv run python -m apex_trainer.debug.render_gif`.
 
 ![Traction-circle widget](docs/media/slice7-gg-widget.png)
 
