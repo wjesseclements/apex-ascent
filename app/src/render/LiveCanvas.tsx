@@ -20,7 +20,7 @@ import {
   tickSession,
   type LiveSession,
 } from '../engine/live';
-import { DEFAULT_PHYSICS, DEFAULT_RAYS } from '../engine/sim/config';
+import { DEFAULT_RAYS, PHYSICS_PRESETS } from '../engine/sim/config';
 import { trailRange } from '../engine/trajectory';
 import { loadOrtPolicy, type LivePolicy } from '../live/ortPolicy';
 import { publish } from '../store/snapshotBus';
@@ -32,8 +32,6 @@ import { TRAIL_SECONDS, drawScene } from './scene';
 const PADDING_PX = 24;
 export const MAX_TICKS_PER_FRAME = 4;
 export const MAX_TICKS = 3600;
-/** Physics hash of the default car (pinned in the parity fixtures). */
-export const DEFAULT_PHYSICS_HASH = 'fc40dfb0b2c9';
 
 export interface LiveCanvasProps {
   /** Injected for tests; defaults to onnxruntime-web. */
@@ -77,11 +75,12 @@ export function LiveCanvas({ loadPolicy = loadOrtPolicy }: LiveCanvasProps) {
       typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => resize());
     observer?.observe(canvas);
 
+    const preset = PHYSICS_PRESETS[model.physics];
     const session: LiveSession = createSession({
       track,
-      physics: DEFAULT_PHYSICS,
+      physics: preset.physics,
       rays: DEFAULT_RAYS,
-      physicsConfigHash: DEFAULT_PHYSICS_HASH,
+      physicsConfigHash: preset.hash,
       policyLabel: `live · ${model.label}`,
       maxTicks: MAX_TICKS,
     });
@@ -120,7 +119,7 @@ export function LiveCanvas({ loadPolicy = loadOrtPolicy }: LiveCanvasProps) {
     let lapsSeen = 0;
     let rateTicks = 0;
     let rateSince = 0;
-    const dt = DEFAULT_PHYSICS.dt;
+    const dt = preset.physics.dt;
 
     const frame = async (nowMs: number) => {
       if (cancelled) return;
