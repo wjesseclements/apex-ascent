@@ -2,10 +2,10 @@ import { useEffect } from 'react';
 import { formatLapTime, formatSpeedMult } from '../engine/format';
 import { duration } from '../engine/trajectory';
 import { useCarSnapshot } from '../store/snapshotBus';
-import { SPEED_OPTIONS, useTransport } from '../store/transport';
+import { SPEED_OPTIONS, selectTrajectory, useTransport } from '../store/transport';
 
 export function Transport() {
-  const trajectory = useTransport((s) => s.trajectory);
+  const trajectory = useTransport(selectTrajectory);
   const isPlaying = useTransport((s) => s.isPlaying);
   const speedMult = useTransport((s) => s.speedMult);
   const { togglePlay, setSpeed, seek } = useTransport.getState();

@@ -120,19 +120,36 @@ export function drawTrail(
   ctx.globalAlpha = 1;
 }
 
+/** Ghost colours, in order of addition (design tokens; the primary keeps the accent). */
+export const GHOST_COLOR_KEYS: readonly (keyof Palette)[] = [
+  'lateral',
+  'throttle',
+  'muted',
+  'text',
+  'brake',
+];
+
+export interface CarStyle {
+  readonly color: string;
+  /** Ghosts are translucent and never draw a trail. */
+  readonly ghost: boolean;
+}
+
 export function drawCar(
   ctx: CanvasRenderingContext2D,
   cam: Camera,
   snap: CarSnapshot,
   p: Palette,
+  style: CarStyle = { color: p.accent, ghost: false },
 ): void {
   const [sx, sy] = worldToScreen(cam, snap.x, snap.y);
   const L = CAR_LENGTH_M * cam.scale;
   const W = CAR_WIDTH_M * cam.scale;
   ctx.save();
+  ctx.globalAlpha = style.ghost ? 0.55 : 1;
   ctx.translate(sx, sy);
   ctx.rotate(-snap.heading); // world CCW-positive → screen (y down) is clockwise
-  ctx.fillStyle = snap.crashed ? p.brake : p.accent;
+  ctx.fillStyle = snap.crashed ? p.brake : style.color;
   ctx.strokeStyle = p.text;
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -147,28 +164,42 @@ export function drawCar(
   ctx.restore();
 
   if (snap.crashed) {
+    ctx.save();
+    ctx.globalAlpha = style.ghost ? 0.55 : 1;
     ctx.strokeStyle = p.brake;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(sx, sy, Math.max(L, 14), 0, Math.PI * 2);
     ctx.stroke();
+    ctx.restore();
   }
 }
 
+export interface SceneCar {
+  readonly trajectory: Trajectory;
+  readonly snapshot: CarSnapshot;
+  readonly style: CarStyle;
+  /** Trail range for the primary; ghosts pass null. */
+  readonly trail: readonly [number, number] | null;
+}
+
+/** Draw the whole frame: track, then every car (ghosts first so the primary is on top). */
 export function drawScene(
   ctx: CanvasRenderingContext2D,
   cam: Camera,
   width: number,
   height: number,
   track: Track,
-  tr: Trajectory,
-  snap: CarSnapshot,
-  trail: readonly [number, number],
+  cars: readonly SceneCar[],
   p: Palette,
 ): void {
   ctx.fillStyle = p.bg;
   ctx.fillRect(0, 0, width, height);
   drawTrack(ctx, cam, track, p);
-  drawTrail(ctx, cam, tr, trail, p);
-  drawCar(ctx, cam, snap, p);
+  const ghosts = cars.filter((c) => c.style.ghost);
+  const primaries = cars.filter((c) => !c.style.ghost);
+  for (const c of [...ghosts, ...primaries]) {
+    if (c.trail) drawTrail(ctx, cam, c.trajectory, c.trail, p);
+    drawCar(ctx, cam, c.snapshot, p, c.style);
+  }
 }

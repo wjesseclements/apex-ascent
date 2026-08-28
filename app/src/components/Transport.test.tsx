@@ -39,7 +39,7 @@ describe('Transport', () => {
     expect(screen.getByText(/\/ 1:00\.000/)).toBeInTheDocument();
   });
   it('is disabled with nothing loaded', () => {
-    useTransport.setState({ trajectory: null });
+    useTransport.setState({ cars: [], focusIndex: 0 });
     render(<Transport />);
     expect(screen.getByRole('button', { name: 'play' })).toBeDisabled();
   });

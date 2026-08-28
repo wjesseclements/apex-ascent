@@ -16,7 +16,7 @@ function load(raw: unknown, name: string) {
 
 beforeEach(() => {
   resetBus();
-  useTransport.setState({ trajectory: null, trajectoryName: null, track: null });
+  useTransport.setState({ cars: [], focusIndex: 0, track: null, loadError: null });
 });
 
 describe('Hud', () => {

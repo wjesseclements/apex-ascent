@@ -1,6 +1,6 @@
 import { formatLapTime, formatSpeedKmh } from '../engine/format';
 import { useCarSnapshot } from '../store/snapshotBus';
-import { useTransport } from '../store/transport';
+import { selectPrimary, selectTrajectory, useTransport } from '../store/transport';
 
 function Stat({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
@@ -15,8 +15,8 @@ function Stat({ label, value, unit }: { label: string; value: string; unit?: str
 }
 
 export function Hud() {
-  const trajectory = useTransport((s) => s.trajectory);
-  const name = useTransport((s) => s.trajectoryName);
+  const trajectory = useTransport(selectTrajectory);
+  const name = useTransport((s) => selectPrimary(s)?.label ?? null);
   const snap = useCarSnapshot();
   if (!trajectory || !snap) {
     return (

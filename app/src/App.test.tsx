@@ -4,7 +4,7 @@ import { useTransport } from './store/transport';
 
 describe('App', () => {
   it('renders the replay layout without autoloading in tests', () => {
-    useTransport.setState({ trajectory: null, trajectoryName: null, track: null, loadError: null });
+    useTransport.setState({ cars: [], focusIndex: 0, track: null, loadError: null });
     render(<App autoload={false} />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Watch the policy drive.');
     expect(screen.getByRole('img', { name: 'track replay' })).toBeInTheDocument();
