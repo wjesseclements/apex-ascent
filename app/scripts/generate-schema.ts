@@ -5,32 +5,52 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { galleryJsonSchema } from '../src/engine/gallery.ts';
 import { trajectoryJsonSchema } from '../src/engine/schema.ts';
 
-const out = resolve(import.meta.dirname, '../../trajectory.schema.json');
-const schema = {
-  $schema: 'https://json-schema.org/draft/2020-12/schema',
-  $id: 'https://github.com/wjesseclements/apex-ascent/trajectory.schema.json',
-  title: 'apex-ascent trajectory',
-  description:
-    'GENERATED from app/src/engine/schema.ts by `npm run schema:generate` — do not edit.',
-  ...trajectoryJsonSchema(),
-};
-const text = JSON.stringify(schema, null, 2) + '\n';
+const SCHEMAS = [
+  {
+    file: 'trajectory.schema.json',
+    title: 'apex-ascent trajectory',
+    source: 'app/src/engine/schema.ts',
+    body: trajectoryJsonSchema,
+  },
+  {
+    file: 'gallery.schema.json',
+    title: 'apex-ascent checkpoint gallery manifest',
+    source: 'app/src/engine/gallery.ts',
+    body: galleryJsonSchema,
+  },
+];
 
-if (process.argv.includes('--check')) {
-  let current = '';
-  try {
-    current = readFileSync(out, 'utf8');
-  } catch {
-    /* missing counts as stale */
+const check = process.argv.includes('--check');
+let stale = false;
+for (const { file, title, source, body } of SCHEMAS) {
+  const out = resolve(import.meta.dirname, '../../', file);
+  const schema = {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: `https://github.com/wjesseclements/apex-ascent/${file}`,
+    title,
+    description: `GENERATED from ${source} by \`npm run schema:generate\` — do not edit.`,
+    ...body(),
+  };
+  const text = JSON.stringify(schema, null, 2) + '\n';
+  if (check) {
+    let current = '';
+    try {
+      current = readFileSync(out, 'utf8');
+    } catch {
+      /* missing counts as stale */
+    }
+    if (current !== text) {
+      console.error(`${file} is stale; run \`npm run schema:generate\``);
+      stale = true;
+    } else {
+      console.log(`${file} is up to date`);
+    }
+  } else {
+    writeFileSync(out, text);
+    console.log(`wrote ${out}`);
   }
-  if (current !== text) {
-    console.error(`trajectory.schema.json is stale; run \`npm run schema:generate\``);
-    process.exit(1);
-  }
-  console.log('trajectory.schema.json is up to date');
-} else {
-  writeFileSync(out, text);
-  console.log(`wrote ${out}`);
 }
+if (stale) process.exit(1);

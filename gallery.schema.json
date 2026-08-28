@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wjesseclements/apex-ascent/gallery.schema.json",
+  "title": "apex-ascent checkpoint gallery manifest",
+  "description": "GENERATED from app/src/engine/gallery.ts by `npm run schema:generate` — do not edit.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "physicsConfigHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{12}$"
+    },
+    "config": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    "tracks": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$"
+      }
+    },
+    "checkpoints": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "note": {
+            "type": "string"
+          },
+          "entries": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "trackId": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9_]+$"
+                },
+                "file": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9_.-]+\\.json$"
+                },
+                "crashed": {
+                  "type": "boolean"
+                },
+                "laps": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "bestLapSec": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "lapTimesSec": {
+                  "type": "array",
+                  "items": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "distanceM": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "sampleHz": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "required": [
+                "trackId",
+                "file",
+                "crashed",
+                "laps",
+                "bestLapSec",
+                "lapTimesSec",
+                "distanceM",
+                "sampleHz"
+              ]
+            }
+          }
+        },
+        "required": [
+          "step",
+          "label",
+          "note",
+          "entries"
+        ]
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "runId",
+    "title",
+    "description",
+    "physicsConfigHash",
+    "config",
+    "tracks",
+    "checkpoints",
+    "createdAt"
+  ]
+}

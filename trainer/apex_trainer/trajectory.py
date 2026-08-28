@@ -24,6 +24,7 @@ from apex_trainer.policies import Policy
 
 SCHEMA_VERSION = 1
 SCHEMA_PATH = Path(__file__).resolve().parents[2] / "trajectory.schema.json"
+GALLERY_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "gallery.schema.json"
 HASH_HEX_CHARS = 12
 # Export precision: 6 decimals (1 µm, 1 µm/s, 1 µm/s²) — far below anything physical,
 # roughly halves file size vs 17-digit floats. NOT rounded: `t` (the contract is
@@ -111,8 +112,18 @@ def record_episode(
     run_id: str,
     checkpoint_step: int | None,
     max_steps: int | None = None,
+    decimate: int = 1,
 ) -> dict[str, Any]:
-    """Run one deterministic episode and return the trajectory document."""
+    """Run one deterministic episode and return the trajectory document.
+
+    ``decimate = k`` keeps every k-th sample (sample 0 always) and sets
+    ``meta.dt = k · dt_sim``, so ``t[i] == i · meta.dt`` still holds exactly
+    (the ``t`` column is recomputed from the new dt, never scaled). Lap
+    ``startStep`` values are re-indexed to the kept samples. Used for the
+    gallery (30 Hz halves the files; the app interpolates between samples).
+    """
+    if decimate < 1:
+        raise ValueError("decimate must be >= 1")
     policy.reset(seed)
     obs, info = env.reset(seed=seed)
     rec = TrajectoryRecorder()
@@ -132,11 +143,18 @@ def record_episode(
             a_lat=float(info["a_lat"]),
         )
     w = env.world
+    dt_sim = env.cfg.sim.physics.dt
+    dt = dt_sim * decimate
     laps = []
-    start = 0
+    start_tick = 0
     for lap_time in w.lap_times:
-        laps.append({"lapTimeSec": lap_time, "startStep": start})
-        start += round(lap_time / env.cfg.sim.physics.dt)
+        laps.append({"lapTimeSec": lap_time, "startStep": round(start_tick / decimate)})
+        start_tick += round(lap_time / dt_sim)
+    columns = rec.columns()
+    if decimate > 1:
+        columns = {name: col[::decimate] for name, col in columns.items()}
+    n = len(columns["t"])
+    columns["t"] = [i * dt for i in range(n)]  # the contract: t[i] == i * dt, exactly
     return {
         "meta": {
             "schemaVersion": SCHEMA_VERSION,
@@ -146,13 +164,13 @@ def record_episode(
             "trackId": env.track.name,
             "physicsConfigHash": physics_config_hash(env.cfg),
             "seed": seed,
-            "dt": env.cfg.sim.physics.dt,
+            "dt": dt,
             "createdAt": datetime.now(UTC).isoformat(),
-            "sampleCount": len(rec.t),
+            "sampleCount": n,
             "crashed": bool(w.crashed),
         },
         "laps": laps,
-        "samples": rec.columns(),
+        "samples": columns,
     }
 
 
@@ -164,4 +182,9 @@ def write_trajectory(doc: dict[str, Any], path: Path) -> Path:
 
 def load_json_schema() -> dict[str, Any]:
     data: dict[str, Any] = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    return data
+
+
+def load_gallery_json_schema() -> dict[str, Any]:
+    data: dict[str, Any] = json.loads(GALLERY_SCHEMA_PATH.read_text(encoding="utf-8"))
     return data

@@ -1,0 +1,295 @@
+{
+ "schemaVersion": 1,
+ "runId": "e7-gamma0995-20m",
+ "title": "E7 \u2014 PPO, \u03b3 0.995, trained on Track A only, 20M steps",
+ "description": "One run, 400 checkpoints. The ladder from crashing at 70 m to 15.8 s laps on Track A \u2014 and the flip: some checkpoints drive the never-seen Track B, the fastest ones do not.",
+ "physicsConfigHash": "fc40dfb0b2c9",
+ "config": {
+  "gamma": 0.995,
+  "ent_coef": 0.0,
+  "tracks": "track_a",
+  "seed": 0,
+  "n_envs": 8
+ },
+ "tracks": [
+  "track_a",
+  "track_b",
+  "track_a_mirror"
+ ],
+ "checkpoints": [
+  {
+   "step": 50000,
+   "label": "50k \u00b7 first steps",
+   "note": "",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e7-gamma0995-20m-50000-track_a.trajectory.json",
+     "crashed": true,
+     "laps": 0,
+     "bestLapSec": null,
+     "lapTimesSec": [],
+     "distanceM": 78.78075233258926,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 100000,
+   "label": "100k \u00b7 throttle, no steering",
+   "note": "Learned to go, not yet to turn.",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e7-gamma0995-20m-100000-track_a.trajectory.json",
+     "crashed": true,
+     "laps": 0,
+     "bestLapSec": null,
+     "lapTimesSec": [],
+     "distanceM": 214.06885511344805,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 250000,
+   "label": "250k \u00b7 first laps",
+   "note": "First clean laps: 17.1 s.",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e7-gamma0995-20m-250000-track_a.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 17.1,
+     "lapTimesSec": [
+      18.366666666666667,
+      17.2,
+      17.1
+     ],
+     "distanceM": 1506.570939285955,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 1000000,
+   "label": "1M",
+   "note": "",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e7-gamma0995-20m-1000000-track_a.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 16.333333333333332,
+     "lapTimesSec": [
+      17.6,
+      16.333333333333332,
+      16.333333333333332
+     ],
+     "distanceM": 1573.1300652633452,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 2000000,
+   "label": "2M",
+   "note": "Already laps Track B (19.15 s) \u2014 generalization comes early, then comes and goes.",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e7-gamma0995-20m-2000000-track_a.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 16.15,
+     "lapTimesSec": [
+      17.5,
+      16.15,
+      16.166666666666668
+     ],
+     "distanceM": 1588.7647896984859,
+     "sampleHz": 30.0
+    },
+    {
+     "trackId": "track_b",
+     "file": "e7-gamma0995-20m-2000000-track_b.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 19.15,
+     "lapTimesSec": [
+      20.616666666666667,
+      19.15,
+      19.166666666666668
+     ],
+     "distanceM": 1555.4158362726457,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 6000000,
+   "label": "6M",
+   "note": "",
+   "entries": [
+    {
+     "trackId": "track_b",
+     "file": "e7-gamma0995-20m-6000000-track_b.trajectory.json",
+     "crashed": true,
+     "laps": 0,
+     "bestLapSec": null,
+     "lapTimesSec": [],
+     "distanceM": 263.0929936558058,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 8000000,
+   "label": "8M \u00b7 generalist",
+   "note": "Competence checkpoint: clean on every track (A 16.02 s, B 18.98 s, mirror 16.72 s).",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e7-gamma0995-20m-8000000-track_a.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 16.016666666666666,
+     "lapTimesSec": [
+      17.366666666666667,
+      16.016666666666666,
+      16.016666666666666
+     ],
+     "distanceM": 1600.6207707342035,
+     "sampleHz": 30.0
+    },
+    {
+     "trackId": "track_b",
+     "file": "e7-gamma0995-20m-8000000-track_b.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 18.983333333333334,
+     "lapTimesSec": [
+      20.566666666666666,
+      18.983333333333334,
+      19.016666666666666
+     ],
+     "distanceM": 1567.6210653617288,
+     "sampleHz": 30.0
+    },
+    {
+     "trackId": "track_a_mirror",
+     "file": "e7-gamma0995-20m-8000000-track_a_mirror.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 16.716666666666665,
+     "lapTimesSec": [
+      18.316666666666666,
+      16.716666666666665,
+      16.733333333333334
+     ],
+     "distanceM": 1542.7225422066822,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 11000000,
+   "label": "11M",
+   "note": "",
+   "entries": [
+    {
+     "trackId": "track_b",
+     "file": "e7-gamma0995-20m-11000000-track_b.trajectory.json",
+     "crashed": true,
+     "laps": 1,
+     "bestLapSec": 20.35,
+     "lapTimesSec": [
+      20.35
+     ],
+     "distanceM": 708.2808523629968,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 13000000,
+   "label": "13M \u00b7 specialist",
+   "note": "Fastest on Track A (15.80 s); crashes on both unseen tracks.",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e7-gamma0995-20m-13000000-track_a.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 15.799999999999999,
+     "lapTimesSec": [
+      17.2,
+      15.799999999999999,
+      15.816666666666666
+     ],
+     "distanceM": 1621.157025323157,
+     "sampleHz": 30.0
+    },
+    {
+     "trackId": "track_b",
+     "file": "e7-gamma0995-20m-13000000-track_b.trajectory.json",
+     "crashed": true,
+     "laps": 0,
+     "bestLapSec": null,
+     "lapTimesSec": [],
+     "distanceM": 301.2459494349589,
+     "sampleHz": 30.0
+    },
+    {
+     "trackId": "track_a_mirror",
+     "file": "e7-gamma0995-20m-13000000-track_a_mirror.trajectory.json",
+     "crashed": true,
+     "laps": 1,
+     "bestLapSec": 18.183333333333334,
+     "lapTimesSec": [
+      18.183333333333334
+     ],
+     "distanceM": 709.6326466078729,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 20000000,
+   "label": "20M \u00b7 final",
+   "note": "",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e7-gamma0995-20m-20000000-track_a.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 16.066666666666666,
+     "lapTimesSec": [
+      17.333333333333332,
+      16.083333333333332,
+      16.066666666666666
+     ],
+     "distanceM": 1596.5229630283632,
+     "sampleHz": 30.0
+    },
+    {
+     "trackId": "track_b",
+     "file": "e7-gamma0995-20m-20000000-track_b.trajectory.json",
+     "crashed": false,
+     "laps": 2,
+     "bestLapSec": 19.583333333333332,
+     "lapTimesSec": [
+      21.116666666666667,
+      19.583333333333332
+     ],
+     "distanceM": 1519.8684976962368,
+     "sampleHz": 30.0
+    }
+   ]
+  }
+ ],
+ "createdAt": "2026-08-28T17:50:53.972943+00:00"
+}
