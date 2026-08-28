@@ -413,3 +413,36 @@ when drag decelerates for free. That is a finding about the environment as
 much as the algorithm, and it is the honest answer. A follow-up that would
 make the question bite: lower drag (so slowing requires braking) — queued as
 a Slice 9 discussion item, not built.
+
+---
+
+## Slice 8a — the low-drag experiment (physics-change discipline)
+
+**Hypothesis (written before the runs):** under the default drag (0.3/s ≈ 9 m/s²
+at top speed) no policy ever braked, because drag slowed the car for free.
+With `LOW_DRAG_PHYSICS` (drag 0.05/s ≈ 1.5 m/s²) slowing for a corner
+*requires* the brakes, so a γ 0.995 policy should discover braking — and, if
+it is worth the grip, trail-braking. `NO_DRAG_PHYSICS` is the limit case.
+Runs: E8a seeds 0 and 1 (low-drag), E8b seed 0 (no-drag); 5M steps each,
+Track A only. The SPEC car stays the default; these presets hash differently.
+
+**E8a seed 0 (low-drag, γ 0.995, 5M) — result.** Checkpoint sweep on Track A:
+100 % clean under jitter from 2M on, best lap **15.17 s @ 5.01M** (the
+low-drag car is faster: drag no longer bleeds speed on the straights).
+The g-g survey (deterministic episodes, thresholds as in Slice 7):
+
+| ckpt | best lap | grip | braking ticks | trail-braking ticks | brake events | min a_long | mean drive |
+|---|---|---|---|---|---|---|---|
+| 1M | 15.73 s | 91 % | 32.3 % | 13.8 % | 30 | −10.5 | +0.32 |
+| 3M | 15.35 s | 91 % | 27.8 % | 17.7 % | 20 | −20.0 | +0.51 |
+| 5M | 15.17 s | 91 % | 22.2 % | 14.0 % | 27 | −19.2 | +0.56 |
+
+**Reading:** with the free brake removed, the same algorithm, reward and
+network **brake on a quarter of all ticks and trail-brake on about one tick in
+seven** — braking hard (peak −20 m/s², the whole budget) while carrying more
+than 4 m/s² of lateral load. Braking events per lap ≈ 10 (three laps in 60 s),
+i.e. roughly one per corner. Grip utilisation 91 %: the policy rides the
+circle in *both* halves now. The Slice 7 "no braking" result was an
+environment property; the trail-braking question is answered **yes** as soon
+as the environment makes braking worth the grip. Seed 1 and the no-drag
+limit follow; the headline is confirmed only if seed 1 agrees.

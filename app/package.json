@@ -15,9 +15,11 @@
     "format": "prettier --write .",
     "test": "vitest",
     "schema:generate": "node scripts/generate-schema.ts",
-    "schema:check": "node scripts/generate-schema.ts --check"
+    "schema:check": "node scripts/generate-schema.ts --check",
+    "postinstall": "node scripts/copy-ort.mjs"
   },
   "dependencies": {
+    "onnxruntime-web": "^1.29.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zod": "^4.4.3",

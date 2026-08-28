@@ -36,3 +36,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# onnxruntime-web runtime, copied from node_modules on postinstall
+app/public/ort/
