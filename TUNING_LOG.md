@@ -288,3 +288,68 @@ policy drives all three tracks cleanly from Track-A-only training. **E7:**
 `e7-gamma0995-20m` — γ 0.995, seed 0, 20M steps (4× the budget) — judged by
 checkpoint sweep, not the final checkpoint. Provisional competence checkpoint
 until E7 is evaluated: **E2 @ 3.5M**.
+
+## E7 — the overnight run: γ 0.995, Track A only, 20M steps (result)
+
+`e7-gamma0995-20m`: 20,004,864 steps in 2,880 s (48 min at ~7k steps/s).
+Checkpoint sweeps every 1M under jitter (top rows):
+
+Track A (3 episodes):
+
+| ckpt | clean rate | crashes/3 | best lap | track |
+|---|---|---|---|---|
+| 13.00M | 100% | 0 | 15.80 s | track_a |
+| 11.00M | 100% | 0 | 15.82 s | track_a |
+| 16.00M | 100% | 0 | 15.83 s | track_a |
+| 17.00M | 100% | 0 | 15.85 s | track_a |
+| 6.00M | 100% | 0 | 15.87 s | track_a |
+| 12.00M | 100% | 0 | 15.88 s | track_a |
+
+
+Track B (5 episodes):
+
+| ckpt | clean rate | crashes/5 | best lap | track |
+|---|---|---|---|---|
+| 8.00M | 100% | 0 | 18.97 s | track_b |
+| 2.00M | 100% | 0 | 19.15 s | track_b |
+| 1.00M | 100% | 0 | 19.15 s | track_b |
+| 19.00M | 100% | 0 | 19.43 s | track_b |
+| 20.00M | 100% | 0 | 19.48 s | track_b |
+| 18.00M | 100% | 0 | 19.48 s | track_b |
+
+
+Candidates on all three tracks (deterministic / 10 jittered episodes):
+
+| E7 ckpt | track_a det / jitter×10 | track_a_mirror det / jitter×10 | track_b det / jitter×10 |
+|---|---|---|---|
+| 6M | 15.87s / 30/30 clean, 0 crash, 15.87s | crash@264m / 0/10 clean, 10 crash | crash@263m / 0/10 clean, 10 crash |
+| 8M | 16.02s / 30/30 clean, 0 crash, 16.00s | 16.72s / 30/30 clean, 0 crash, 16.70s | 18.98s / 30/30 clean, 0 crash, 18.97s |
+| 11M | 15.82s / 30/30 clean, 0 crash, 15.82s | 16.53s / 30/30 clean, 0 crash, 16.52s | crash@708m / 0/10 clean, 10 crash |
+| 13M | 15.80s / 30/30 clean, 0 crash, 15.80s | crash@710m / 1/11 clean, 10 crash, 18.20s | crash@301m / 0/10 clean, 10 crash |
+| 16M | 15.83s / 30/30 clean, 0 crash, 15.83s | crash@260m / 0/10 clean, 10 crash | crash@201m / 0/10 clean, 10 crash |
+
+**Findings:**
+- **4× the budget bought 0.10 s on Track A** (15.80 s @ 13M vs 15.90 s @ 5M) —
+  inside the 0.16 s seed spread. By the stop rule that is "no effect": the
+  5M-step policy was already at this configuration's ceiling for Track A.
+- **Generalization is a property of *some* checkpoints, not of the run.**
+  Track B is driven cleanly by 1M, 2M, 8M and 18–20M, and crashed at by 6M,
+  11M, 13M and 16M; the fastest Track A checkpoints are the non-generalizing
+  ones. Speed on A and transfer to B trade off along training, with no
+  monotone trend. Selecting by evaluation on the target is not optional.
+
+**Competence checkpoint (chosen): E7 @ 8M — the generalist.** Track A
+16.02 s, mirrored A 16.72 s, Track B 18.98 s, 30/30 clean under jitter on
+all three. It costs 0.22 s on Track A versus the specialist (E7 @ 13M,
+15.80 s, crashes on both unseen tracks). One checkpoint that drives every
+track honestly is worth more to the app, the gallery and the write-up than
+a fifth of a second on the training track; the specialist is recorded here
+and stays available for FINDINGS. (Decision flagged to the supervisor at the
+Slice 6 demo.)
+
+**Slice 6 verdict against SLICES.md:** repeatable clean laps on Track A — yes,
+across three seeds and every configuration except E4's unstable checkpoints,
+at 15.8–16.2 s versus the GA's 18.83 s reference (with the friendlier
+centre-point crash rule caveat). Track B, recorded honestly: **from Track-A-
+only training, a γ = 0.995 policy laps Track B cleanly (18.98 s)** — provided
+the checkpoint is chosen by evaluation; the γ = 0.99 baseline never does.

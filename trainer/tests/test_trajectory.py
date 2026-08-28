@@ -10,7 +10,16 @@ import jsonschema
 import pytest
 
 from apex_trainer import cli
-from apex_trainer.config import DEFAULT_ENV, DEFAULT_SIM, EnvConfig, RewardConfig
+from apex_trainer.config import (
+    DEFAULT_ENV,
+    DEFAULT_EVAL_JITTER,
+    DEFAULT_SIM,
+    EnvConfig,
+    EpisodeConfig,
+    PhysicsConfig,
+    RewardConfig,
+    SimConfig,
+)
 from apex_trainer.env import ApexDriveEnv
 from apex_trainer.evaluate import export_trajectories
 from apex_trainer.policies import make_policy
@@ -93,11 +102,19 @@ def test_crash_episode_export(schema: dict[str, object]) -> None:
     assert doc["laps"] == []
 
 
-def test_physics_config_hash_is_stable_and_sensitive() -> None:
+def test_physics_config_hash_covers_physics_only() -> None:
     h = physics_config_hash(DEFAULT_ENV)
     assert len(h) == 12 and int(h, 16) >= 0
     assert h == physics_config_hash(EnvConfig())
-    assert h != physics_config_hash(EnvConfig(reward=RewardConfig(crash_penalty=11.0)))
+    # reward, episode rules and start jitter do not move the car: same hash
+    assert h == physics_config_hash(EnvConfig(reward=RewardConfig(crash_penalty=11.0)))
+    assert h == physics_config_hash(
+        EnvConfig(episode=EpisodeConfig(max_steps=10, start_jitter=DEFAULT_EVAL_JITTER))
+    )
+    # a physics constant does
+    assert h != physics_config_hash(
+        EnvConfig(sim=SimConfig(physics=PhysicsConfig(traction_accel_max=21.0)))
+    )
 
 
 def test_export_cli_for_baseline_and_run(

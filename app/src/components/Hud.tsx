@@ -44,11 +44,11 @@ export function Hud() {
           CRASH at {formatLapTime(snap.t)} s
         </p>
       )}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <Stat label="speed" value={formatSpeedKmh(snap.speed)} unit="km/h" />
-        <Stat label="lap" value={`${snap.lap}`} unit={`· ${snap.lap - 1} completed`} />
         <Stat label="lap clock" value={formatLapTime(snap.lapClock)} />
       </div>
+      <Stat label="lap" value={`${snap.lap}`} unit={`· ${snap.lap - 1} completed`} />
       <div className="grid grid-cols-2 gap-3">
         <Stat label="steer" value={snap.steer.toFixed(2)} />
         <Stat label="drive" value={snap.drive.toFixed(2)} />

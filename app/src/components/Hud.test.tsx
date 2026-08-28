@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import crash from '../../public/trajectories/ppo-5m-track_b.trajectory.json';
+import crash from '../../public/trajectories/ppo-5m-track_b-before.trajectory.json';
 import scripted from '../../public/trajectories/scripted-track_a.trajectory.json';
 import { parseTrajectory } from '../engine/schema';
 import { duration, snapshotAt } from '../engine/trajectory';
