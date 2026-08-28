@@ -4,7 +4,10 @@ export interface GalleryRef {
   readonly path: string;
 }
 
-export const GALLERIES: readonly GalleryRef[] = [{ id: 'e7', path: '/gallery/e7/' }];
+export const GALLERIES: readonly GalleryRef[] = [
+  { id: 'e7', path: '/gallery/e7/' },
+  { id: 'e8', path: '/gallery/e8/' },
+];
 
 /** Landing state: E7 on Track A, the generalist focused with the specialist as a ghost. */
 export const LANDING = {

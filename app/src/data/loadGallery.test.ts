@@ -49,6 +49,7 @@ describe('loadGallery', () => {
     expect(m.checkpoints.length).toBe(10);
     expect(f).toHaveBeenCalledWith('/gallery/e7/manifest.json');
     expect(() => galleryRef('nope')).toThrow(/unknown gallery/);
+    expect(galleryRef('e8').path).toBe('/gallery/e8/');
   });
   it('focus loads a checkpoint as the primary; ghost adds; a missing track entry is an error', async () => {
     stubFetch();

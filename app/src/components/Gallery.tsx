@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
-import { galleryRef, focusCheckpoint, ghostCheckpoint, loadLanding } from '../data/loadGallery';
-import { LANDING } from '../data/galleries';
+import {
+  fetchManifest,
+  focusCheckpoint,
+  galleryRef,
+  ghostCheckpoint,
+  loadLanding,
+} from '../data/loadGallery';
+import { GALLERIES, LANDING } from '../data/galleries';
 import { findEntry, type GalleryManifest } from '../engine/gallery';
 import { formatLapTime } from '../engine/format';
 import { selectPrimary, useTransport } from '../store/transport';
@@ -12,18 +18,33 @@ export interface GalleryProps {
 }
 
 export function Gallery({ autoload = true }: GalleryProps) {
-  const [manifest, setManifest] = useState<GalleryManifest | null>(null);
+  const [galleryId, setGalleryId] = useState<string>(LANDING.galleryId);
+  const [loaded, setLoaded] = useState<{ id: string; manifest: GalleryManifest } | null>(null);
+  const manifest = loaded?.id === galleryId ? loaded.manifest : null;
   const [trackId, setTrackId] = useState<string>(LANDING.trackId);
   const [error, setError] = useState<string | null>(null);
   const primary = useTransport(selectPrimary);
-  const ref = galleryRef(LANDING.galleryId);
+  const ref = galleryRef(galleryId);
 
   useEffect(() => {
     if (!autoload) return;
-    loadLanding(ref, LANDING.trackId, LANDING.focusStep, LANDING.ghostSteps)
-      .then(setManifest)
+    const load =
+      galleryId === LANDING.galleryId
+        ? loadLanding(ref, LANDING.trackId, LANDING.focusStep, LANDING.ghostSteps)
+        : fetchManifest(ref).then(async (m) => {
+            const first = m.checkpoints[m.checkpoints.length - 1]!;
+            const track = m.tracks[0]!;
+            setTrackId(track);
+            await focusCheckpoint(m, ref, first.step, track);
+            return m;
+          });
+    load
+      .then((m) => {
+        setLoaded({ id: galleryId, manifest: m });
+        setError(null);
+      })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
-  }, [autoload, ref]);
+  }, [autoload, galleryId, ref]);
 
   const focusStep = primary?.trajectory.meta.checkpointStep ?? null;
   const primaryTrack = primary?.trajectory.meta.trackId;
@@ -43,9 +64,23 @@ export function Gallery({ autoload = true }: GalleryProps) {
   return (
     <section aria-label="checkpoint gallery" className="flex flex-col gap-3">
       <div>
-        <h2 className="font-mono text-xs tracking-[0.2em] text-muted uppercase">
-          Checkpoint gallery
-        </h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-mono text-xs tracking-[0.2em] text-muted uppercase">
+            Checkpoint gallery
+          </h2>
+          <select
+            aria-label="gallery run"
+            value={galleryId}
+            onChange={(e) => setGalleryId(e.target.value)}
+            className="rounded-md border border-border bg-surface-raised px-2 py-1 font-mono text-xs text-text"
+          >
+            {GALLERIES.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.id}
+              </option>
+            ))}
+          </select>
+        </div>
         <p className="text-sm font-medium text-text">{manifest.title}</p>
         <p className="text-xs text-muted">{manifest.description}</p>
       </div>
