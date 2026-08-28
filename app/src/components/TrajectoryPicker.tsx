@@ -1,10 +1,10 @@
 import { useState, type ChangeEvent } from 'react';
 import { loadFile, loadSample } from '../data/loadTrajectory';
 import { SAMPLES } from '../data/samples';
-import { useTransport } from '../store/transport';
+import { selectPrimary, useTransport } from '../store/transport';
 
 export function TrajectoryPicker() {
-  const name = useTransport((s) => s.trajectoryName);
+  const name = useTransport((s) => selectPrimary(s)?.label ?? null);
   const error = useTransport((s) => s.loadError);
   const [busy, setBusy] = useState(false);
 

@@ -10,7 +10,13 @@ import { TrackCanvas } from './TrackCanvas';
 
 beforeEach(() => {
   resetBus();
-  useTransport.setState({ trajectory: null, track: null, isPlaying: false, seekTarget: null });
+  useTransport.setState({
+    cars: [],
+    focusIndex: 0,
+    track: null,
+    isPlaying: false,
+    seekTarget: null,
+  });
 });
 
 describe('TrackCanvas', () => {
@@ -39,6 +45,16 @@ describe('TrackCanvas', () => {
     });
     expect(useTransport.getState().seekTarget).toBeNull();
     expect(getSnapshot()!.t).toBeCloseTo(10.016, 3);
+
+    // adding a ghost restarts the loop on the same clock semantics; the HUD still
+    // follows the focused car, and switching focus changes what is published
+    act(() => {
+      useTransport.getState().addGhost(r.trajectory, 'ghost');
+      frame!(2000);
+    });
+    expect(useTransport.getState().cars).toHaveLength(2);
+    act(() => useTransport.getState().setFocus(1));
+    expect(getSnapshot()?.t).toBe(0); // fresh loop for the new focus publishes its first snapshot
     unmount();
   });
 });

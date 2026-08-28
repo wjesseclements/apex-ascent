@@ -11,21 +11,26 @@ import { fitCamera, type Camera } from '../engine/camera';
 import { advanceClock, frameDelta } from '../engine/clock';
 import { duration, snapshotAt, trailRange, wrapClock } from '../engine/trajectory';
 import { publish } from '../store/snapshotBus';
-import { useTransport } from '../store/transport';
+import { selectTrajectory, useTransport } from '../store/transport';
 import { readPalette } from './palette';
-import { TRAIL_SECONDS, drawScene } from './scene';
+import { GHOST_COLOR_KEYS, TRAIL_SECONDS, drawScene, type SceneCar } from './scene';
 
 const PADDING_PX = 24;
 
 export function TrackCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const trajectory = useTransport((s) => s.trajectory);
+  // Re-render (and restart the loop) only when the set of cars or the focus changes —
+  // never per frame, never on play/pause/speed/seek.
+  const cars = useTransport((s) => s.cars);
+  const focusIndex = useTransport((s) => s.focusIndex);
+  const trajectory = selectTrajectory({ cars, focusIndex });
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !trajectory) return;
     const track = useTransport.getState().track;
     if (!track) return;
+    const ghosts = cars.filter((_, i) => i !== focusIndex);
     const ctx = canvas.getContext('2d');
     const palette = readPalette();
     const dur = duration(trajectory);
@@ -63,17 +68,20 @@ export function TrackCanvas() {
       if (state.isPlaying) clock = advanceClock(clock, dt, state.speedMult, dur);
       const snap = snapshotAt(trajectory, clock);
       if (ctx) {
-        drawScene(
-          ctx,
-          camera,
-          width,
-          height,
-          track,
+        const scene: SceneCar[] = ghosts.map((g, i) => ({
+          trajectory: g.trajectory,
+          // a ghost that has ended freezes at its last sample (its crash ring stays)
+          snapshot: snapshotAt(g.trajectory, Math.min(clock, duration(g.trajectory))),
+          style: { color: palette[GHOST_COLOR_KEYS[i % GHOST_COLOR_KEYS.length]!], ghost: true },
+          trail: null,
+        }));
+        scene.push({
           trajectory,
-          snap,
-          trailRange(trajectory, clock, TRAIL_SECONDS),
-          palette,
-        );
+          snapshot: snap,
+          style: { color: palette.accent, ghost: false },
+          trail: trailRange(trajectory, clock, TRAIL_SECONDS),
+        });
+        drawScene(ctx, camera, width, height, track, scene, palette);
       }
       publish(snap, nowMs);
       raf = requestAnimationFrame(frame);
@@ -84,7 +92,7 @@ export function TrackCanvas() {
       cancelAnimationFrame(raf);
       observer?.disconnect();
     };
-  }, [trajectory]);
+  }, [cars, focusIndex, trajectory]);
 
   return (
     <canvas
