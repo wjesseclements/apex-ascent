@@ -25,6 +25,12 @@ from apex_trainer.policies import Policy
 SCHEMA_VERSION = 1
 SCHEMA_PATH = Path(__file__).resolve().parents[2] / "trajectory.schema.json"
 HASH_HEX_CHARS = 12
+# Export precision: 6 decimals (1 µm, 1 µm/s, 1 µm/s²) — far below anything physical,
+# roughly halves file size vs 17-digit floats. NOT rounded: `t` (the contract is
+# t[i] == i * dt exactly — the app's O(1) index depends on it) and `heading`
+# (rounding could push a value past ±π and out of the schema's (-π, π] range).
+EXPORT_DECIMALS = 6
+UNROUNDED_COLUMNS = frozenset({"t", "heading"})
 
 
 def physics_config_hash(env_cfg: EnvConfig) -> str:
@@ -68,7 +74,7 @@ class TrajectoryRecorder:
         self.a_lat.append(a_lat)
 
     def columns(self) -> dict[str, list[float]]:
-        return {
+        raw = {
             "t": self.t,
             "x": self.x,
             "y": self.y,
@@ -79,6 +85,15 @@ class TrajectoryRecorder:
             "aLong": self.a_long,
             "aLat": self.a_lat,
         }
+        return {
+            name: col if name in UNROUNDED_COLUMNS else [_round(v) for v in col]
+            for name, col in raw.items()
+        }
+
+
+def _round(v: float) -> float:
+    r = round(v, EXPORT_DECIMALS)
+    return 0.0 if r == 0.0 else r  # never emit -0.0
 
 
 def record_episode(

@@ -61,7 +61,7 @@ def test_scripted_export_is_valid_and_internally_consistent(
         assert len(samples[c]) == n, c
     dt = DEFAULT_SIM.physics.dt
     for i in (0, 1, 2, 60, 1800):
-        assert samples["t"][i] == pytest.approx(i * dt, abs=1e-12)
+        assert samples["t"][i] == i * dt  # exact: the app's O(1) index depends on it
     # sample 0 is the reset state
     assert (samples["x"][0], samples["y"][0], samples["heading"][0]) == (0.0, 0.0, 0.0)
     assert samples["speed"][0] == DEFAULT_SIM.physics.start_speed
