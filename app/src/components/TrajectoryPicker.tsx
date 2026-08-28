@@ -25,7 +25,9 @@ export function TrajectoryPicker() {
 
   return (
     <section className="flex flex-col gap-3" aria-label="trajectory picker">
-      <h2 className="font-mono text-xs tracking-[0.2em] text-muted uppercase">Trajectory</h2>
+      <h2 className="font-mono text-xs tracking-[0.2em] text-muted uppercase">
+        Other trajectories
+      </h2>
       <ul className="flex flex-col gap-2">
         {SAMPLES.map((s) => {
           const active = name === s.label;

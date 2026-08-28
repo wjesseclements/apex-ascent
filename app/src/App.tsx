@@ -1,17 +1,11 @@
-import { useEffect } from 'react';
 import { CarList } from './components/CarList';
+import { Gallery } from './components/Gallery';
 import { Hud } from './components/Hud';
-import { loadSample } from './data/loadTrajectory';
-import { SAMPLES } from './data/samples';
 import { TrajectoryPicker } from './components/TrajectoryPicker';
 import { Transport } from './components/Transport';
 import { TrackCanvas } from './render/TrackCanvas';
-import { useTransport } from './store/transport';
 
 export function App({ autoload = true }: { autoload?: boolean }) {
-  useEffect(() => {
-    if (autoload && useTransport.getState().cars.length === 0) void loadSample(SAMPLES[0]!.id);
-  }, [autoload]);
   return (
     <main className="mx-auto flex min-h-screen max-w-7xl flex-col gap-4 px-4 py-6 sm:px-6">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
@@ -40,6 +34,7 @@ export function App({ autoload = true }: { autoload?: boolean }) {
         <aside className="flex flex-col gap-6 rounded-lg border border-border bg-surface p-4">
           <Hud />
           <CarList />
+          <Gallery autoload={autoload} />
           <TrajectoryPicker />
         </aside>
       </div>
