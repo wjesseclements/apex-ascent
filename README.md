@@ -27,7 +27,10 @@ tracks/    Track JSON (shared; single source of truth)
 ```
 
 The border between the halves is the trajectory JSON schema: defined once as
-a Zod schema in `app/`, emitted by the Python exporter, cross-validated in CI.
+a Zod schema in `app/src/engine/schema.ts`, generated to
+`trajectory.schema.json` (`cd app && npm run schema:generate`), emitted by
+the Python exporter (`uv run evaluate … --export`), and validated against the
+generated file in the trainer's tests — so drift fails CI.
 
 ## Commands
 
@@ -74,12 +77,15 @@ weights and the step counter, not mid-stream RNG state. See SPEC §9 and
 
 ## Status
 
-Slices 1–4 done: bootstrap, pure sim core (traction circle, tracks, raycasts,
+Slices 1–5 done: bootstrap, pure sim core (traction circle, tracks, raycasts,
 progress), Gymnasium env `ApexDrive-v0` with baseline policies, PPO training
-with reconstructible run directories, checkpoint/resume and TensorBoard. The
-baseline agent laps Track A cleanly in ~16.3 s after ~1M steps
-([TUNING_LOG.md](TUNING_LOG.md)). Next: trajectory export + the replay app
-(Slice 5). See SLICES.md.
+with reconstructible run directories, checkpoint/resume and TensorBoard, the
+trajectory contract (Zod ↔ Python, cross-validated in CI), and **Replay v1**
+in the browser — watch the baseline agent lap Track A in 16.18 s. Next: train
+to competence and Track B generalization (Slice 6). See SLICES.md and
+[TUNING_LOG.md](TUNING_LOG.md).
+
+![Replay v1](docs/media/slice5-replay-v1.png)
 
 ## License
 
