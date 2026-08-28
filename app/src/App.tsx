@@ -1,5 +1,6 @@
 import { CarList } from './components/CarList';
 import { Gallery } from './components/Gallery';
+import { GgWidget } from './components/GgWidget';
 import { Hud } from './components/Hud';
 import { TrajectoryPicker } from './components/TrajectoryPicker';
 import { Transport } from './components/Transport';
@@ -33,6 +34,7 @@ export function App({ autoload = true }: { autoload?: boolean }) {
         </div>
         <aside className="flex flex-col gap-6 rounded-lg border border-border bg-surface p-4">
           <Hud />
+          <GgWidget />
           <CarList />
           <Gallery autoload={autoload} />
           <TrajectoryPicker />
