@@ -105,6 +105,15 @@ def build_evaluate_parser() -> argparse.ArgumentParser:
     p.add_argument("--episodes", type=int, default=3)
     p.add_argument("--seed", type=int, default=0, help="episode i uses seed + i")
     p.add_argument("--max-steps", type=int, default=None, help="cap below the env's 3600")
+    p.add_argument(
+        "--export",
+        nargs="?",
+        const="",
+        default=None,
+        metavar="DIR",
+        help="also write one trajectory JSON per episode (SPEC §7); for runs/<id> the default "
+        "DIR is the run's eval/ directory, for --policy it is required",
+    )
     return p
 
 
@@ -132,6 +141,7 @@ def evaluate(argv: list[str] | None = None) -> int:
             episodes=args.episodes,
             seed=args.seed,
             max_steps=args.max_steps,
+            export=args.export is not None,
         )
         for i, st in enumerate(stats):
             print(format_episode(i + 1, st))
@@ -153,4 +163,24 @@ def evaluate(argv: list[str] | None = None) -> int:
         stats.append(st)
         print(format_episode(i + 1, st))
     print(format_summary(args.policy, track, stats))
+    if args.export is not None:
+        if args.export == "":
+            parser.error("--export needs a DIR when evaluating a --policy baseline")
+        from pathlib import Path
+
+        from apex_trainer.evaluate import export_trajectories
+
+        written = export_trajectories(
+            env,
+            policy,
+            out_dir=Path(args.export),
+            stem=f"{args.policy}-{track}",
+            episodes=args.episodes,
+            seed=args.seed,
+            run_id="baseline",
+            checkpoint_step=None,
+            max_steps=args.max_steps,
+        )
+        for w in written:
+            print(f"wrote {w}")
     return 0

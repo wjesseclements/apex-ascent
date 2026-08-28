@@ -11,13 +11,17 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
-    "lint": "eslint . && prettier --check .",
+    "lint": "eslint . && prettier --check . && npm run -s schema:check",
     "format": "prettier --write .",
-    "test": "vitest"
+    "test": "vitest",
+    "schema:generate": "node scripts/generate-schema.ts",
+    "schema:check": "node scripts/generate-schema.ts --check"
   },
   "dependencies": {
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

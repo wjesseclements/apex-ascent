@@ -95,6 +95,35 @@ def stats_to_dict(st: EpisodeStats) -> dict[str, Any]:
     return {**asdict(st), "best_lap": st.best_lap}
 
 
+def export_trajectories(
+    env: ApexDriveEnv,
+    policy: Policy,
+    *,
+    out_dir: Path,
+    stem: str,
+    episodes: int,
+    seed: int,
+    run_id: str,
+    checkpoint_step: int | None,
+    max_steps: int | None = None,
+) -> list[Path]:
+    """Record ``episodes`` deterministic episodes as trajectory JSON files."""
+    from apex_trainer.trajectory import record_episode, write_trajectory
+
+    written = []
+    for i in range(episodes):
+        doc = record_episode(
+            env,
+            policy,
+            seed=seed + i,
+            run_id=run_id,
+            checkpoint_step=checkpoint_step,
+            max_steps=max_steps,
+        )
+        written.append(write_trajectory(doc, out_dir / f"{stem}-ep{i}.trajectory.json"))
+    return written
+
+
 def evaluate_checkpoint(
     paths: RunPaths,
     *,
@@ -103,8 +132,10 @@ def evaluate_checkpoint(
     episodes: int,
     seed: int,
     max_steps: int | None = None,
+    export: bool = False,
 ) -> tuple[Path, list[EpisodeStats], str]:
-    """Deterministic evaluation of one checkpoint; writes eval/<steps>-<track>.json.
+    """Deterministic evaluation of one checkpoint; writes eval/<steps>-<track>.json
+    (and, with ``export``, eval/<steps>-<track>-ep<i>.trajectory.json per episode).
 
     Returns (json path, per-episode stats, track used). ``track=None`` means the
     run's training track; ``checkpoint_steps=None`` means the latest checkpoint.
@@ -126,6 +157,18 @@ def evaluate_checkpoint(
     stats = [run_episode(env, policy, seed=seed + i, max_steps=max_steps) for i in range(episodes)]
     out = paths.eval_dir / f"{checkpoint_steps}-{track_name}.json"
     out.parent.mkdir(exist_ok=True)
+    if export:
+        export_trajectories(
+            env,
+            policy,
+            out_dir=paths.eval_dir,
+            stem=f"{checkpoint_steps}-{track_name}",
+            episodes=episodes,
+            seed=seed,
+            run_id=paths.run_id,
+            checkpoint_step=checkpoint_steps,
+            max_steps=max_steps,
+        )
     out.write_text(
         json.dumps(
             {
