@@ -14,9 +14,11 @@ import { useLive } from './store/live';
 export function App({ autoload = true }: { autoload?: boolean }) {
   const mode = useLive((s) => s.mode);
   const setMode = useLive.getState().setMode;
+  const link =
+    typeof window !== 'undefined' ? parseDeepLink(window.location.search) : parseDeepLink('');
   useEffect(() => {
-    if (autoload && typeof window !== 'undefined')
-      applyDeepLink(parseDeepLink(window.location.search));
+    if (autoload) applyDeepLink(link);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the URL is read once on mount
   }, [autoload]);
   return (
     <main className="mx-auto flex min-h-screen max-w-7xl flex-col gap-4 px-4 py-6 sm:px-6">
@@ -62,14 +64,30 @@ export function App({ autoload = true }: { autoload?: boolean }) {
           <Hud />
           <GgWidget />
           <CarList />
-          <Gallery autoload={autoload} />
+          <Gallery autoload={autoload} initialPreset={link.preset} />
           <TrajectoryPicker />
         </aside>
       </div>
-      <p className="text-xs text-muted">
-        Space toggles play. Trail colour: <span className="text-throttle">throttle</span> ·{' '}
-        <span className="text-brake">brake</span> · coast.
-      </p>
+      <footer className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
+        <span>
+          {mode === 'live'
+            ? 'Live: the ONNX policy drives the TypeScript sim at 60 Hz in your browser.'
+            : 'Replay: Space toggles play. Trail colour: throttle green · brake red · coast grey.'}
+        </span>
+        <a
+          className="underline decoration-border underline-offset-4 hover:text-text"
+          href="https://github.com/wjesseclements/apex-ascent/blob/main/FINDINGS.md"
+        >
+          FINDINGS
+        </a>
+        <a
+          className="underline decoration-border underline-offset-4 hover:text-text"
+          href="https://github.com/wjesseclements/apex-ascent/blob/main/TUNING_LOG.md"
+        >
+          TUNING_LOG
+        </a>
+        <span>Deep links: ?preset=flip · ?mode=live&amp;model=e8a-lowdrag-5m&amp;autostart=1</span>
+      </footer>
     </main>
   );
 }
