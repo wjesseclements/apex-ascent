@@ -81,15 +81,22 @@ Slices 1–6 done: bootstrap, pure sim core (traction circle, tracks, raycasts,
 progress), Gymnasium env `ApexDrive-v0` with baseline policies, PPO training
 with reconstructible run directories, checkpoint/resume and TensorBoard, the
 trajectory contract (Zod ↔ Python, cross-validated in CI), **Replay v1** in
-the browser, the Slice 6 tuning campaign, and (Slice 7) the **checkpoint
-gallery** with ghost cars and the **traction-circle widget**. Headline: with γ = 0.995 a
+the browser, the Slice 6 tuning campaign, (Slice 7) the **checkpoint
+gallery** with ghost cars and the **traction-circle widget**, and (Slice 8)
+**live driving**: the sim ported to TypeScript (Python↔TS parity gate:
+1.9e-13 m drift, bit-identical observations) with the trained policy running
+in-browser via onnxruntime-web — plus the **low-drag experiment**. Headline: with γ = 0.995 a
 policy trained on Track A alone laps Track A in 16.0 s **and** the never-seen
 Track B in 19.0 s (30/30 clean laps under start jitter on both) — see
 [TUNING_LOG.md](TUNING_LOG.md) for every run, including the ones that didn't
-work. First reading of the headline question: **no checkpoint of any run brakes,
-ever** — the policy rides the traction circle's edge laterally at partial
-throttle and lets drag do the slowing (details in TUNING_LOG). Next: live
-in-browser driving (Slice 8), then FINDINGS (Slice 9).
+work. The headline question, in two halves: under the SPEC car (drag 0.3/s) **no
+checkpoint of any run ever brakes** — drag is a free 9 m/s² brake and the
+policy rides the traction circle's edge laterally at partial throttle. Under
+a low-drag car (0.05/s, a named preset with its own pins and hash) the same
+algorithm **discovers trail-braking**: 22–32 % of ticks braking, 14–21 %
+braking while cornering, ~10 brake events per lap, across two seeds. Both
+cars can be driven live (`?mode=live&model=e8a-lowdrag-5m&autostart=1`).
+Details and every run in TUNING_LOG. Next: FINDINGS and polish (Slice 9).
 
 ![Traction-circle widget](docs/media/slice7-gg-widget.png)
 

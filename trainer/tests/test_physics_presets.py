@@ -56,8 +56,20 @@ def test_low_drag_actually_needs_braking() -> None:
 def test_scripted_driver_still_laps_under_low_drag(preset: str) -> None:
     env = ApexDriveEnv(TRACK_A, env_config_with_physics(preset))
     st = run_episode(env, make_policy("scripted"), seed=0, max_steps=3600)
+    base = run_episode(ApexDriveEnv(TRACK_A), make_policy("scripted"), seed=0, max_steps=3600)
     assert not st.crashed and st.laps >= 2
-    assert st.mean_drive < 0.6  # it now has to brake for corners
+    assert st.lap_times != base.lap_times  # the physics actually changed the episode
+    assert st.mean_drive < base.mean_drive  # less drag ⇒ less throttle needed
+
+
+def test_evaluate_cli_applies_the_physics_preset(capsys: pytest.CaptureFixture[str]) -> None:
+    cli.evaluate(["--policy", "scripted", "--episodes", "1", "--max-steps", "1800"])
+    default = capsys.readouterr().out
+    cli.evaluate(
+        ["--policy", "scripted", "--episodes", "1", "--max-steps", "1800", "--physics", "no-drag"]
+    )
+    nodrag = capsys.readouterr().out
+    assert default != nodrag
 
 
 def test_preset_lands_in_the_run_snapshot(tmp_path: Path) -> None:

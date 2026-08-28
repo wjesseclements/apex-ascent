@@ -200,19 +200,18 @@ def evaluate(argv: list[str] | None = None) -> int:
     if args.policy is None:
         parser.error("either runs/<run_id> or --policy is required")
 
-    from apex_trainer.config import DEFAULT_ENV
     from apex_trainer.env import ApexDriveEnv
     from apex_trainer.policies import make_policy
 
     track = args.track or TRACK_A_DEFAULT
-    env_cfg = DEFAULT_ENV
+    from dataclasses import replace
+
+    from apex_trainer.config import DEFAULT_EVAL_JITTER, env_config_with_physics
+
+    env_cfg = env_config_with_physics(args.physics)
     if args.jitter:
-        from dataclasses import replace
-
-        from apex_trainer.config import DEFAULT_EVAL_JITTER
-
         env_cfg = replace(
-            DEFAULT_ENV, episode=replace(DEFAULT_ENV.episode, start_jitter=DEFAULT_EVAL_JITTER)
+            env_cfg, episode=replace(env_cfg.episode, start_jitter=DEFAULT_EVAL_JITTER)
         )
     env = ApexDriveEnv(track, env_cfg)
     policy = make_policy(args.policy)
