@@ -43,8 +43,16 @@ def arc_position(track: Track, p: Vec2, hint: int | None = None) -> tuple[float,
 
 
 def initial_progress(track: Track, p: Vec2, hint: int | None = None) -> ProgressState:
-    """Progress for a car spawned at ``p``; ``s`` starts at the spawn arc (0 on the line)."""
+    """Progress for a car spawned at ``p``.
+
+    ``s`` starts at the spawn arc measured from the start line, taken in
+    (−L/2, L/2]: a car spawned a little *behind* the line (a jittered start)
+    gets a small negative ``s`` and must drive a genuine full lap to complete
+    lap 1 — rather than reading as arc ≈ L and "completing" a lap on tick one.
+    """
     arc, segment = arc_position(track, p, hint)
+    if arc > track.total_length / 2:
+        arc -= track.total_length
     return ProgressState(s=arc, segment=segment)
 
 

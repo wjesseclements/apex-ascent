@@ -11,7 +11,7 @@ import pytest
 from apex_trainer.sim.track import Track
 from apex_trainer.tracks import TRACK_A, TRACK_B, load_track
 
-TRACK_NAMES = (TRACK_A, TRACK_B)
+TRACK_NAMES = (TRACK_A, "track_a_mirror", TRACK_B)
 
 
 @pytest.fixture(scope="session")

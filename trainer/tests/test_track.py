@@ -19,7 +19,7 @@ from apex_trainer.tracks import available_tracks, load_track
 
 # Pinned centerline lengths (m). Computed from the committed JSON; a change means the
 # track data changed, which must be deliberate. Tolerance covers summation order only.
-PINNED_LENGTH = {"track_a": 439.631, "track_b": 509.057}
+PINNED_LENGTH = {"track_a": 439.631, "track_a_mirror": 439.631, "track_b": 509.057}
 LENGTH_TOL = 0.001
 
 # Distance-from-segment assertions: mitered offsets are exact up to float rounding
@@ -36,8 +36,8 @@ def _dist_to_segment_line(p: tuple[float, float], track: Track, i: int) -> float
     return abs(cross(d, sub(p, a)))
 
 
-def test_both_tracks_are_available() -> None:
-    assert available_tracks() == ["track_a", "track_b"]
+def test_all_tracks_are_available() -> None:
+    assert available_tracks() == ["track_a", "track_a_mirror", "track_b"]
 
 
 def test_pinned_lengths(any_track: Track) -> None:
@@ -50,6 +50,14 @@ def test_frame_conversion_preserved_handedness(track_a: Track, track_b: Track) -
     # clockwise. In a y-up frame, clockwise = negative shoelace area.
     assert signed_area(track_a) < 0
     assert signed_area(track_b) > 0
+
+
+def test_mirror_track_is_track_a_as_left_handers(track_a: Track) -> None:
+    m = load_track("track_a_mirror")
+    assert signed_area(m) == pytest.approx(-signed_area(track_a))
+    assert m.total_length == pytest.approx(track_a.total_length)
+    for (x, y), (mx, my) in zip(track_a.centerline, m.centerline, strict=True):
+        assert (mx, my) == (x, -y)
 
 
 def test_start_pose_on_the_start_line_facing_plus_x(any_track: Track) -> None:

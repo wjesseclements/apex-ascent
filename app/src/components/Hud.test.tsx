@@ -31,6 +31,7 @@ describe('Hud', () => {
     expect(screen.getByText('Scripted')).toBeInTheDocument();
     expect(screen.getByText(/scripted · track_a · physics/)).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument(); // lap 2 at t=30 (lap 1 = 25.7 s)
+    expect(screen.getByText(/1 completed/)).toBeInTheDocument();
     expect(screen.getByText('Lap 1')).toBeInTheDocument();
     expect(screen.getByText('25.700')).toBeInTheDocument();
     expect(screen.queryByRole('status')).toBeNull();

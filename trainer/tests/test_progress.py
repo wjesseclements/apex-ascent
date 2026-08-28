@@ -85,12 +85,16 @@ def test_offset_line_is_still_monotone(any_track: Track) -> None:
 
     # Step the path in N equal pieces so it returns exactly to its start: projection
     # is a pure function of position, so s must then have advanced by exactly L.
+    # Start half a piece in: the path's vertex 0 is the mitered offset of the track's
+    # vertex 0 and therefore EXACTLY equidistant from segments 0 and n-1 — a tie the
+    # hinted and full scans resolve differently (found on track_a_mirror).
     n_steps = math.ceil(path.total_length / STEP_M)
     piece = path.total_length / n_steps
-    st = initial_progress(any_track, point_at_arc(path, 0.0)[0])
+    phase = piece / 2
+    st = initial_progress(any_track, point_at_arc(path, phase)[0])
     s0 = st.s
     for k_step in range(1, n_steps + 1):
-        st, delta = update_progress(any_track, st, point_at_arc(path, k_step * piece)[0])
+        st, delta = update_progress(any_track, st, point_at_arc(path, phase + k_step * piece)[0])
         assert delta >= -DELTA_TOL, k_step  # 0 at a plateau, up to rounding
     assert st.s - s0 == pytest.approx(any_track.total_length, abs=DELTA_TOL)
 
