@@ -7,11 +7,11 @@ trajectory export (Slice 5).
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any
 
-from apex_trainer.config import env_config_from_dict
+from apex_trainer.config import StartJitter, env_config_from_dict
 from apex_trainer.env import ApexDriveEnv
 from apex_trainer.policies import CheckpointPolicy, Policy
 from apex_trainer.runs import RunPaths, checkpoint_path, latest_checkpoint, read_config_snapshot
@@ -34,6 +34,16 @@ class EpisodeStats:
     @property
     def best_lap(self) -> float | None:
         return min(self.lap_times) if self.lap_times else None
+
+    @property
+    def laps_attempted(self) -> int:
+        """Completed laps plus the lap in progress at a crash (a truncation's
+        unfinished lap is not an attempt — the clock ran out, the car didn't fail)."""
+        return self.laps + (1 if self.crashed else 0)
+
+    @property
+    def clean_laps(self) -> int:
+        return self.laps
 
 
 def run_episode(
@@ -84,15 +94,23 @@ def format_summary(policy: str, track: str, stats: list[EpisodeStats]) -> str:
     mean_drive = sum(s.mean_drive for s in stats) / n
     laps = [t for s in stats for t in s.lap_times]
     best = f"{min(laps):.2f} s" if laps else "none"
+    attempted = sum(s.laps_attempted for s in stats)
+    clean = sum(s.clean_laps for s in stats)
+    rate = f"{clean}/{attempted}" + (f" ({clean / attempted:.0%})" if attempted else "")
     return (
         f"summary: {policy} on {track}, {n} episode(s): crash rate {crashes}/{n}, "
-        f"mean return {mean_return:.1f}, mean distance {mean_distance:.1f} m, "
+        f"clean laps {rate}, mean return {mean_return:.1f}, mean distance {mean_distance:.1f} m, "
         f"mean drive {mean_drive:+.2f}, best lap {best}"
     )
 
 
 def stats_to_dict(st: EpisodeStats) -> dict[str, Any]:
-    return {**asdict(st), "best_lap": st.best_lap}
+    return {
+        **asdict(st),
+        "best_lap": st.best_lap,
+        "laps_attempted": st.laps_attempted,
+        "clean_laps": st.clean_laps,
+    }
 
 
 def export_trajectories(
@@ -133,6 +151,7 @@ def evaluate_checkpoint(
     seed: int,
     max_steps: int | None = None,
     export: bool = False,
+    jitter: StartJitter | None = None,
 ) -> tuple[Path, list[EpisodeStats], str]:
     """Deterministic evaluation of one checkpoint; writes eval/<steps>-<track>.json
     (and, with ``export``, eval/<steps>-<track>-ep<i>.trajectory.json per episode).
@@ -143,6 +162,8 @@ def evaluate_checkpoint(
     snap = read_config_snapshot(paths)
     track_name = track or str(snap["track"])
     env_cfg = env_config_from_dict(snap["env"])
+    if jitter is not None:
+        env_cfg = replace(env_cfg, episode=replace(env_cfg.episode, start_jitter=jitter))
     if checkpoint_steps is None:
         latest = latest_checkpoint(paths)
         if latest is None:
@@ -155,14 +176,15 @@ def evaluate_checkpoint(
     env = ApexDriveEnv(track_name, env_cfg)
     policy = CheckpointPolicy(ckpt, name=f"ppo@{checkpoint_steps}")
     stats = [run_episode(env, policy, seed=seed + i, max_steps=max_steps) for i in range(episodes)]
-    out = paths.eval_dir / f"{checkpoint_steps}-{track_name}.json"
+    suffix = "-jitter" if jitter is not None and jitter.enabled else ""
+    out = paths.eval_dir / f"{checkpoint_steps}-{track_name}{suffix}.json"
     out.parent.mkdir(exist_ok=True)
     if export:
         export_trajectories(
             env,
             policy,
             out_dir=paths.eval_dir,
-            stem=f"{checkpoint_steps}-{track_name}",
+            stem=f"{checkpoint_steps}-{track_name}{suffix}",
             episodes=episodes,
             seed=seed,
             run_id=paths.run_id,
@@ -176,6 +198,7 @@ def evaluate_checkpoint(
                 "checkpoint_steps": checkpoint_steps,
                 "track": track_name,
                 "seed": seed,
+                "jitter": (jitter or env_cfg.episode.start_jitter).to_dict(),
                 "episodes": [stats_to_dict(s) for s in stats],
                 "summary": format_summary(policy.name, track_name, stats),
             },

@@ -6,6 +6,7 @@ This directory is the single source of truth: neither half embeds track data.
 | file | name | centerline | length | direction | origin |
 |---|---|---|---|---|---|
 | `track_a.json` | Track A — training | 111 pts | 439.6 m | clockwise (right-handers) | apex-evolve `training.json` |
+| `track_a_mirror.json` | Track A mirrored | 111 pts | 439.6 m | counter-clockwise (left-handers) | generated: `uv run python -m apex_trainer.debug.mirror_track` (y negated) |
 | `track_b.json` | Track B — generalization | 128 pts | 509.1 m | counter-clockwise (left-handers) | apex-evolve `heldout.json` |
 
 ## Format

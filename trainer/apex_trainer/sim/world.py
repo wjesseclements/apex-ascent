@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from apex_trainer.config import SimConfig
 from apex_trainer.sim.car import Action, CarState, step_car
 from apex_trainer.sim.containment import is_inside_track
+from apex_trainer.sim.geometry import wrap_angle
 from apex_trainer.sim.progress import (
     ProgressState,
     initial_progress,
@@ -62,9 +63,14 @@ def world_time(state: WorldState, cfg: SimConfig) -> float:
 
 def reset(track: Track, cfg: SimConfig) -> WorldState:
     """Car on the start line, centered, heading along the track, at start_speed."""
-    car = CarState(
-        x=track.start.x, y=track.start.y, heading=track.start.heading, speed=cfg.physics.start_speed
+    return reset_at(
+        track, track.start.x, track.start.y, track.start.heading, cfg.physics.start_speed
     )
+
+
+def reset_at(track: Track, x: float, y: float, heading: float, speed: float) -> WorldState:
+    """A world with the car at an explicit pose (jittered starts, tests)."""
+    car = CarState(x=x, y=y, heading=wrap_angle(heading), speed=max(0.0, speed))
     return WorldState(
         car=car,
         progress=initial_progress(track, (car.x, car.y)),

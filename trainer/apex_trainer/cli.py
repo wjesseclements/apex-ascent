@@ -106,6 +106,12 @@ def build_evaluate_parser() -> argparse.ArgumentParser:
     p.add_argument("--seed", type=int, default=0, help="episode i uses seed + i")
     p.add_argument("--max-steps", type=int, default=None, help="cap below the env's 3600")
     p.add_argument(
+        "--jitter",
+        action="store_true",
+        help="perturb each episode's start (speed ±1 m/s, lateral ±1.5 m, heading ±5°) so the "
+        "clean-lap rate over N episodes means something on a deterministic env",
+    )
+    p.add_argument(
         "--export",
         nargs="?",
         const="",
@@ -131,6 +137,7 @@ def evaluate(argv: list[str] | None = None) -> int:
     if args.run_dir is not None:
         from pathlib import Path
 
+        from apex_trainer.config import DEFAULT_EVAL_JITTER
         from apex_trainer.evaluate import evaluate_checkpoint
         from apex_trainer.runs import open_run
 
@@ -142,6 +149,7 @@ def evaluate(argv: list[str] | None = None) -> int:
             seed=args.seed,
             max_steps=args.max_steps,
             export=args.export is not None,
+            jitter=DEFAULT_EVAL_JITTER if args.jitter else None,
         )
         for i, st in enumerate(stats):
             print(format_episode(i + 1, st))
@@ -151,11 +159,21 @@ def evaluate(argv: list[str] | None = None) -> int:
     if args.policy is None:
         parser.error("either runs/<run_id> or --policy is required")
 
+    from apex_trainer.config import DEFAULT_ENV
     from apex_trainer.env import ApexDriveEnv
     from apex_trainer.policies import make_policy
 
     track = args.track or TRACK_A_DEFAULT
-    env = ApexDriveEnv(track)
+    env_cfg = DEFAULT_ENV
+    if args.jitter:
+        from dataclasses import replace
+
+        from apex_trainer.config import DEFAULT_EVAL_JITTER
+
+        env_cfg = replace(
+            DEFAULT_ENV, episode=replace(DEFAULT_ENV.episode, start_jitter=DEFAULT_EVAL_JITTER)
+        )
+    env = ApexDriveEnv(track, env_cfg)
     policy = make_policy(args.policy)
     stats = []
     for i in range(args.episodes):

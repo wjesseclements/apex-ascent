@@ -14,6 +14,28 @@ Reference points:
 - Baselines (Track A, 60 s): `random` dithers ~16 m, never crashes;
   `random-throttle` crashes 5/5 within seconds.
 
+## Observation from the Slice 5 replay (supervisor, 2026-08-28)
+
+Watching the PPO@5M trail on Track A: the agent holds the throttle essentially
+flat (drive ≈ +1 for almost the whole lap, mean +0.94) and manages grip through
+**line choice alone** — unlike the GA champion, which lifted and coasted into
+corners (76 % full throttle / 23 % coast on seed 42). That sharpens the Slice 7
+g-g question: is the agent riding the traction circle's edge on the lateral
+axis only (pure cornering), or trading braking for turning (trail-braking)?
+The `aLong`/`aLat` columns are already exported; the widget will show it.
+
+## Evaluation protocol (Slice 6, approved)
+
+- **Headline lap time:** deterministic eval, no jitter — same checkpoint +
+  seed + track ⇒ identical trajectory.
+- **Clean-lap rate:** `evaluate … --episodes 10 --jitter` — each episode's
+  start is perturbed (speed ±1 m/s, lateral ±1.5 m, heading ±5°, seeded), and
+  the rate is clean laps ÷ laps attempted (completed + the one in progress at
+  a crash). On a deterministic env this is the only way "9/10" means anything.
+- Bug found while adding jitter: a start slightly *behind* the line projected
+  to arc ≈ L and "completed" a 0.02 s lap on tick one. Fixed in
+  `progress.initial_progress` (start arc taken in (−L/2, L/2]). Pins unchanged.
+
 ## Open hypotheses (queue for Slice 6)
 
 1. **γ = 0.99 is a ~1.7 s horizon at 60 Hz.** Braking for a corner has to start

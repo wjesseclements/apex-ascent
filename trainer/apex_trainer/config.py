@@ -145,6 +145,34 @@ class RewardConfig:
 
 
 @dataclass(frozen=True)
+class StartJitter:
+    """Per-episode perturbation of the start state (Slice 6, approved). All zero =
+    the SPEC §3.4 deterministic start. Magnitudes are half-widths of uniform
+    ranges drawn from the env's seeded RNG, so evaluation stays reproducible."""
+
+    speed: float = 0.0
+    """m/s: start_speed ± speed. Slice 6 eval uses 1.0 — a modest kick either way."""
+
+    lateral: float = 0.0
+    """m: offset across the track ± lateral. Slice 6 eval uses 1.5 — a quarter of the
+    12 m width, well inside the edges."""
+
+    heading: float = 0.0
+    """rad: heading ± heading. Slice 6 eval uses 5° — enough to demand a correction,
+    not enough to point at a wall from the start line."""
+
+    @property
+    def enabled(self) -> bool:
+        return self.speed != 0.0 or self.lateral != 0.0 or self.heading != 0.0
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+DEFAULT_EVAL_JITTER = StartJitter(speed=1.0, lateral=1.5, heading=math.radians(5.0))
+
+
+@dataclass(frozen=True)
 class EpisodeConfig:
     """Episode rules (SPEC §3.4): crash terminates, laps don't, a step limit truncates."""
 
@@ -152,8 +180,11 @@ class EpisodeConfig:
     """60 simulated seconds at 60 Hz — enough for two competent laps; multi-lap
     episodes teach sustained pace."""
 
+    start_jitter: StartJitter = StartJitter()
+    """Off by default: the deterministic start keeps every existing pin intact."""
+
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {"max_steps": self.max_steps, "start_jitter": self.start_jitter.to_dict()}
 
 
 @dataclass(frozen=True)
@@ -250,7 +281,10 @@ def env_config_from_dict(d: dict[str, Any]) -> EnvConfig:
         sim=sim,
         observation=ObservationConfig(**d["observation"]),
         reward=RewardConfig(**d["reward"]),
-        episode=EpisodeConfig(**d["episode"]),
+        episode=EpisodeConfig(
+            max_steps=d["episode"]["max_steps"],
+            start_jitter=StartJitter(**d["episode"].get("start_jitter", {})),
+        ),
     )
 
 

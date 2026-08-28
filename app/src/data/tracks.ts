@@ -3,10 +3,15 @@
  * directory at build time (approved: no copies, one source of truth).
  */
 import trackA from '../../../tracks/track_a.json';
+import trackAMirror from '../../../tracks/track_a_mirror.json';
 import trackB from '../../../tracks/track_b.json';
 import { buildTrack, parseTrackData, type Track } from '../engine/track';
 
-const RAW: Record<string, unknown> = { track_a: trackA, track_b: trackB };
+const RAW: Record<string, unknown> = {
+  track_a: trackA,
+  track_a_mirror: trackAMirror,
+  track_b: trackB,
+};
 const cache = new Map<string, Track>();
 
 export const TRACK_IDS = Object.keys(RAW);

@@ -21,8 +21,9 @@ from numpy.typing import NDArray
 
 from apex_trainer.config import DEFAULT_ENV, EnvConfig
 from apex_trainer.sim.car import Action, clamp_action
+from apex_trainer.sim.geometry import left_normal
 from apex_trainer.sim.track import Track
-from apex_trainer.sim.world import WorldState, reset, sense, step, world_time
+from apex_trainer.sim.world import WorldState, reset, reset_at, sense, step, world_time
 from apex_trainer.tracks import TRACK_A, load_track
 
 ENV_ID = "ApexDrive-v0"
@@ -62,7 +63,7 @@ class ApexDriveEnv(gym.Env[Obs, Act]):
         super().reset(seed=seed)
         if seed is not None:
             self.last_seed = seed
-        self._world = reset(self.track, self.cfg.sim)
+        self._world = self._initial_world()
         self._prev_action = Action(0.0, 0.0)
         self._a_lat = 0.0
         return self._observe(), self._info(a_long=0.0, delta_s=0.0, lap_completed=False)
@@ -83,6 +84,25 @@ class ApexDriveEnv(gym.Env[Obs, Act]):
         return self._observe(), float(reward), terminated, truncated, info
 
     # -- internals -----------------------------------------------------------
+
+    def _initial_world(self) -> WorldState:
+        """Deterministic start, or a jittered one drawn from the seeded env RNG."""
+        jitter = self.cfg.episode.start_jitter
+        track, physics = self.track, self.cfg.sim.physics
+        if not jitter.enabled:
+            return reset(track, self.cfg.sim)
+        rng = self.np_random
+        d_speed = float(rng.uniform(-jitter.speed, jitter.speed)) if jitter.speed else 0.0
+        d_lat = float(rng.uniform(-jitter.lateral, jitter.lateral)) if jitter.lateral else 0.0
+        d_head = float(rng.uniform(-jitter.heading, jitter.heading)) if jitter.heading else 0.0
+        n = left_normal(track.directions[0])
+        return reset_at(
+            track,
+            track.start.x + n[0] * d_lat,
+            track.start.y + n[1] * d_lat,
+            track.start.heading + d_head,
+            physics.start_speed + d_speed,
+        )
 
     @property
     def world(self) -> WorldState:

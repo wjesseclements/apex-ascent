@@ -1,5 +1,6 @@
 import fixture from './__fixtures__/track-geometry.python.json';
 import trackA from '../../../tracks/track_a.json';
+import trackAMirror from '../../../tracks/track_a_mirror.json';
 import trackB from '../../../tracks/track_b.json';
 import { TrackFormatError, buildTrack, parseTrackData } from './track';
 
@@ -22,6 +23,7 @@ const python = fixture as Fixture;
 
 describe.each([
   ['track_a', trackA],
+  ['track_a_mirror', trackAMirror],
   ['track_b', trackB],
 ])('buildTrack(%s) matches the Python sim', (name, raw) => {
   const track = buildTrack(parseTrackData(raw));
