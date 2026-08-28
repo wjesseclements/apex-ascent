@@ -19,7 +19,7 @@ from apex_trainer.train import make_vec_env
 
 
 def bench(kind: str, n_envs: int, steps: int, seed: int = 0) -> float:
-    vec = make_vec_env("track_a", DEFAULT_ENV, n_envs, seed, kind)
+    vec = make_vec_env(("track_a",), DEFAULT_ENV, n_envs, seed, kind)
     rng = np.random.default_rng(seed)
     try:
         vec.reset()

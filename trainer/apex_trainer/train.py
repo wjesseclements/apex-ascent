@@ -9,7 +9,7 @@ session in metadata. ``--steps`` is always a *total*: resuming a 500k run with
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -55,18 +55,20 @@ VEC_ENV_KINDS = ("dummy", "subproc")
 
 
 def make_env_fn(
-    track: str, env_cfg: EnvConfig, seed: int, rank: int
+    tracks: Sequence[str], env_cfg: EnvConfig, seed: int, rank: int
 ) -> Callable[[], gym.Env[Any, Any]]:
     def _make() -> gym.Env[Any, Any]:
-        env = ApexDriveEnv(track, env_cfg)
+        env = ApexDriveEnv(tuple(tracks), env_cfg)
         env.reset(seed=seed + rank)
         return Monitor(env)
 
     return _make
 
 
-def make_vec_env(track: str, env_cfg: EnvConfig, n_envs: int, seed: int, kind: str) -> VecEnv:
-    fns = [make_env_fn(track, env_cfg, seed, rank) for rank in range(n_envs)]
+def make_vec_env(
+    tracks: Sequence[str], env_cfg: EnvConfig, n_envs: int, seed: int, kind: str
+) -> VecEnv:
+    fns = [make_env_fn(tracks, env_cfg, seed, rank) for rank in range(n_envs)]
     if kind == "dummy":
         return DummyVecEnv(fns)
     if kind == "subproc":
@@ -139,7 +141,8 @@ def train(args: TrainArgs) -> TrainResult:
         write_metadata(paths, metadata)
 
     seed_everything(seed, ppo_cfg.torch_threads)
-    vec_env = make_vec_env(track, env_cfg, train_cfg.n_envs, seed, train_cfg.vec_env)
+    tracks = train_cfg.tracks if track in train_cfg.tracks else (track, *train_cfg.tracks)
+    vec_env = make_vec_env(tracks, env_cfg, train_cfg.n_envs, seed, train_cfg.vec_env)
     try:
         resumed_from = 0
         if args.resume is not None:
