@@ -81,9 +81,9 @@ export function Gallery({ autoload = true }: GalleryProps) {
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-text">{cp.label}</span>
+                  <span className="min-w-0 truncate text-text">{cp.label}</span>
                   <span
-                    className={`font-mono text-xs tabular-nums ${entry.crashed ? 'text-brake' : 'text-muted'}`}
+                    className={`shrink-0 font-mono text-xs whitespace-nowrap tabular-nums ${entry.crashed ? 'text-brake' : 'text-muted'}`}
                   >
                     {entry.crashed
                       ? `crash @ ${Math.round(entry.distanceM)} m`
