@@ -9,6 +9,7 @@ describe('App', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Watch the policy drive.');
     expect(screen.getByRole('img', { name: 'track replay' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /on its training track/ })).toBeInTheDocument();
+    expect(screen.getByText(/Loading gallery/)).toBeInTheDocument();
     expect(screen.getByLabelText('open trajectory file')).toBeInTheDocument();
   });
 });
