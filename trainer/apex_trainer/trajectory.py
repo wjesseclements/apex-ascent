@@ -34,8 +34,15 @@ UNROUNDED_COLUMNS = frozenset({"t", "heading"})
 
 
 def physics_config_hash(env_cfg: EnvConfig) -> str:
-    """First 12 hex chars of SHA-256 over the canonical env-config JSON."""
-    canonical = json.dumps(env_cfg.to_dict(), sort_keys=True, separators=(",", ":"))
+    """First 12 hex chars of SHA-256 over the canonical PHYSICS config JSON.
+
+    Physics only — dt, grip budget, engine/brake limits, v_max, drag, steer
+    rate, start speed. Reward, episode length, start jitter and the ray fan do
+    not change how the car moves, so two trajectories with the same hash are
+    physically comparable (Slice 7 refuses to overlay ghosts otherwise). The
+    track is identified separately by ``trackId``.
+    """
+    canonical = json.dumps(env_cfg.sim.physics.to_dict(), sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:HASH_HEX_CHARS]
 
 

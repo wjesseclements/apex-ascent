@@ -77,13 +77,15 @@ weights and the step counter, not mid-stream RNG state. See SPEC §9 and
 
 ## Status
 
-Slices 1–5 done: bootstrap, pure sim core (traction circle, tracks, raycasts,
+Slices 1–6 done: bootstrap, pure sim core (traction circle, tracks, raycasts,
 progress), Gymnasium env `ApexDrive-v0` with baseline policies, PPO training
 with reconstructible run directories, checkpoint/resume and TensorBoard, the
-trajectory contract (Zod ↔ Python, cross-validated in CI), and **Replay v1**
-in the browser — watch the baseline agent lap Track A in 16.18 s. Next: train
-to competence and Track B generalization (Slice 6). See SLICES.md and
-[TUNING_LOG.md](TUNING_LOG.md).
+trajectory contract (Zod ↔ Python, cross-validated in CI), **Replay v1** in
+the browser, and the Slice 6 tuning campaign. Headline: with γ = 0.995 a
+policy trained on Track A alone laps Track A in 16.0 s **and** the never-seen
+Track B in 19.0 s (30/30 clean laps under start jitter on both) — see
+[TUNING_LOG.md](TUNING_LOG.md) for every run, including the ones that didn't
+work. Next: the checkpoint gallery and the traction-circle widget (Slice 7).
 
 ![Replay v1](docs/media/slice5-replay-v1.png)
 
