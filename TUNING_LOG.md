@@ -353,3 +353,63 @@ at 15.8–16.2 s versus the GA's 18.83 s reference (with the friendlier
 centre-point crash rule caveat). Track B, recorded honestly: **from Track-A-
 only training, a γ = 0.995 policy laps Track B cleanly (18.98 s)** — provided
 the checkpoint is chosen by evaluation; the γ = 0.99 baseline never does.
+
+---
+
+## Slice 7 — the g-g survey: does PPO trail-brake? (first reading)
+
+Metrics as defined in `app/src/engine/gg.ts` (approved thresholds: trail-braking
+tick = a_long < −2 m/s² and |a_lat| > 4; power-on cornering = a_long > 0 and
+|a_lat| > 12; grip used = mean |a| / A). **`a_long` excludes drag** — it is the
+traction-scaled commanded longitudinal acceleration; drag (0.3/s, ≈ 9 m/s² at
+30 m/s) is applied afterwards as a speed decay outside the grip budget, so a
+lift reads as 0 and only a real brake command reads negative. Table computed
+over the committed gallery files (deterministic episodes, sample 0 excluded):
+
+| checkpoint | track | result | grip used | braking ticks | trail-braking ticks | power-on cornering | brake events | peak |a_lat| | min a_long |
+|---|---|---|---|---|---|---|---|---|---|
+| 0.05M | track_a | crash | 28% | 0.0% | 0.0% | 0% | 0 | 0.6 | 3.7 |
+| 0.1M | track_a | crash | 63% | 0.0% | 0.0% | 34% | 0 | 19.0 | 4.6 |
+| 0.25M | track_a | 17.10 s | 80% | 0.0% | 0.0% | 57% | 0 | 20.0 | 1.3 |
+| 1M | track_a | 16.33 s | 86% | 0.0% | 0.0% | 63% | 0 | 19.9 | 2.4 |
+| 2M | track_a | 16.15 s | 88% | 0.0% | 0.0% | 67% | 0 | 19.8 | 2.9 |
+| 8M | track_a | 16.02 s | 88% | 0.0% | 0.0% | 68% | 0 | 19.9 | 1.5 |
+| 13M | track_a | 15.80 s | 88% | 0.0% | 0.0% | 69% | 0 | 19.8 | 2.5 |
+| 20M | track_a | 16.07 s | 89% | 0.0% | 0.0% | 70% | 0 | 19.9 | 2.2 |
+| 8M | track_a_mirror | 16.72 s | 82% | 0.0% | 0.0% | 51% | 0 | 20.0 | 1.0 |
+| 13M | track_a_mirror | crash | 84% | 0.0% | 0.0% | 55% | 0 | 19.9 | 1.6 |
+| 2M | track_b | 19.15 s | 84% | 0.0% | 0.0% | 51% | 0 | 19.9 | 2.1 |
+| 6M | track_b | crash | 79% | 0.0% | 0.0% | 46% | 0 | 20.0 | 1.0 |
+| 8M | track_b | 18.98 s | 81% | 0.0% | 0.0% | 47% | 0 | 20.0 | 1.1 |
+| 11M | track_b | crash | 80% | 0.0% | 0.0% | 46% | 0 | 20.0 | 0.9 |
+| 13M | track_b | crash | 81% | 0.0% | 0.0% | 51% | 0 | 19.9 | 1.6 |
+| 20M | track_b | 19.58 s | 77% | 0.0% | 0.0% | 42% | 0 | 20.0 | 0.2 |
+| scripted | track_a | 24.82 s | 50% | 5.0% | 1.3% | 24% | 58 | 20.0 | -11.1 |
+| ppo@5013504 | track_b | crash | 80% | 0.0% | 0.0% | 49% | 0 | 20.0 | 0.5 |
+
+**Reading:**
+- **No PPO checkpoint brakes. Ever.** 0 braking ticks, 0 brake events on
+  every checkpoint of E7 on every track, and on the Slice 4 baseline. The
+  scripted driver, for contrast, brakes 58 times per run (5 % of ticks, 1.3 %
+  trail-braking by the same definition, peak −11 m/s²).
+- **It does not even lift to zero.** The minimum commanded a_long across a
+  full 60 s episode is +0.2 … +4.6 m/s² (drive ≥ 0.02 … 0.4). The policy
+  slows for corners by *asking* for less throttle while the traction circle
+  scales that request down further under lateral load, and drag does the
+  actual decelerating. In this car model drag is a 9 m/s² "brake" that costs
+  no grip — and the agent found it.
+- **Grip used climbs with training** (28 % → 63 % → 80 % → 86–89 % on Track A)
+  while peak |a_lat| pins at 19.8–20.0 m/s² from 100k steps on: the policy
+  learned to ride the circle's edge laterally within the first 100k steps and
+  spent the rest of training on line and throttle modulation (power-on
+  cornering share 34 % → 70 %).
+- On the unseen tracks the same signature holds (grip 77–84 %, no braking);
+  the crashes are line errors, not grip errors.
+
+**Verdict for the headline question (to be finalized in FINDINGS.md):** under
+this physics (brake ≤ A, drag 0.3/s) and this reward (Δs), PPO does **not**
+discover trail-braking — it discovers that braking is never worth the grip
+when drag decelerates for free. That is a finding about the environment as
+much as the algorithm, and it is the honest answer. A follow-up that would
+make the question bite: lower drag (so slowing requires braking) — queued as
+a Slice 9 discussion item, not built.
