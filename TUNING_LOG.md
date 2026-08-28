@@ -463,3 +463,38 @@ early braking of 1M settles). Seed 1's *final* checkpoint is a degraded one
 Slice 6 again, and the reason the competence pick is always a sweep. The
 headline is confirmed across seeds: **under low drag, PPO discovers
 trail-braking.** The no-drag limit (E8b) follows.
+
+**E8b seed 0 (no drag, γ 0.995, 5M) — the limit case.** Sweep: 100 % clean
+from 3M, best 15.17 s @ 4M. g-g survey:
+
+| ckpt | best lap | grip | braking ticks | trail-braking ticks | brake events | min a_long | mean drive |
+|---|---|---|---|---|---|---|---|
+| 1M | 15.58 s | 88 % | 27.1 % | 16.3 % | 232 | −14.2 | +0.28 |
+| 3M | 15.18 s | 92 % | 39.0 % | 28.5 % | 50 | −19.9 | +0.29 |
+| 5.01M | 15.28 s | 94 % | 35.4 % | 26.1 % | 61 | −16.3 | +0.34 |
+
+**Scripted reference driver under each preset** (Track A, 60 s; it brakes by
+design, so it is the control): default 25.70 / 24.82 s, mean drive +0.44;
+low-drag 24.58 / 23.87 s, +0.12; no-drag 24.40 / 23.70 s, +0.06. (A CLI bug
+was found while producing this row — `evaluate --policy … --physics` had
+silently ignored the preset; fixed, with a test that the preset changes the
+episode.)
+
+## Slice 8a verdict: trail-braking is a dose-response to drag
+
+| drag (1/s) | free deceleration at 30 m/s | braking ticks | trail-braking ticks | brake events / lap | best lap |
+|---|---|---|---|---|---|
+| 0.30 (SPEC default) | 9.0 m/s² | **0 %** (all runs, all checkpoints) | **0 %** | 0 | 15.80 s |
+| 0.05 | 1.5 m/s² | 22–32 % (2 seeds) | 14–21 % | ~10 | 15.17 s |
+| 0.00 | 0 | 27–39 % | 16–29 % | ~17 | 15.17 s |
+
+The same algorithm, reward, network and horizon; only how much the
+environment slows the car for free changes. When drag is a free brake, PPO
+never touches the pedal and manages grip through line alone (Slice 7). Remove
+the free brake and it brakes on a quarter to a third of all ticks, and a
+large share of that braking happens *while cornering* at up to the full
+20 m/s² budget — trail-braking, by the metric's definition, on both seeds.
+The headline answer is therefore not "yes" or "no" but **"whenever braking is
+worth the grip"** — which is a statement about the environment's economics
+that the agent read correctly in all three cases. FINDINGS.md (Slice 9)
+leads with this table.

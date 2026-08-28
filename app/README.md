@@ -24,5 +24,13 @@ snapshot bus), `render/` (the one rAF loop and pure draw routines),
 `components/` (HUD, transport, picker), `data/` (track registry importing
 `../../tracks/*.json` at build time; committed samples in `public/trajectories/`).
 
-`npm run schema:generate` regenerates `../trajectory.schema.json` from the Zod
-schema; `npm run lint` fails if it is stale.
+`npm run schema:generate` regenerates `../trajectory.schema.json` and
+`../gallery.schema.json` from the Zod schemas; `npm run lint` fails if they
+are stale.
+
+Live mode (`src/live/`, `src/engine/sim/`): the sim core ported from Python
+(parity-tested against recorded action tapes at every tick), driven at a
+fixed 60 Hz by ONNX policies in `public/models/` through onnxruntime-web.
+The WASM runtime is copied into `public/ort/` on `npm install` (gitignored)
+and loaded from the app's own origin only when live mode starts. Deep links:
+`?mode=live&track=track_b&model=e7-13m&autostart=1`.
