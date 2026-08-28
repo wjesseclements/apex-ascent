@@ -16,7 +16,7 @@ holds the law.
 ## Commands
 
 - Trainer: `cd trainer && uv run pytest` · `uv run train --steps N [--resume runs/<id>]`
-  · `uv run evaluate runs/<id> [--checkpoint N]` · `uv run tensorboard`
+  · `uv run evaluate runs/<id> [--checkpoint N] [--export]` · `uv run tensorboard --logdir runs`
 - App: `cd app && npm run dev | typecheck | lint | test -- --run | build`
 - CI must run all of the above (tests/lint/typecheck/build) on every PR.
 

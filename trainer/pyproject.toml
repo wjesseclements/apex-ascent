@@ -19,10 +19,12 @@ evaluate = "apex_trainer.cli:evaluate"
 
 [dependency-groups]
 dev = [
+    "jsonschema>=4.23",
     "matplotlib>=3.9",
     "mypy>=1.14",
     "pytest>=8.3",
     "ruff>=0.12",
+    "types-jsonschema>=4.26.0.20260518",
 ]
 
 [tool.uv.sources]
