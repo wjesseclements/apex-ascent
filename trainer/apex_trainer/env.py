@@ -12,6 +12,7 @@ randomization in v0; revisit in Slice 6 only with evidence).
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 import gymnasium as gym
@@ -35,9 +36,24 @@ Act = NDArray[np.float32]
 class ApexDriveEnv(gym.Env[Obs, Act]):
     metadata: dict[str, Any] = {"render_modes": []}
 
-    def __init__(self, track: str | Track = TRACK_A, cfg: EnvConfig = DEFAULT_ENV) -> None:
+    def __init__(
+        self,
+        track: str | Track | Sequence[str] = TRACK_A,
+        cfg: EnvConfig = DEFAULT_ENV,
+    ) -> None:
+        """``track`` may be a name, a built Track, or several names: with several,
+        each episode samples one from the env's seeded RNG (Slice 6 multi-track
+        training). ``self.track`` is always the track of the current episode."""
         super().__init__()
-        self.track: Track = load_track(track) if isinstance(track, str) else track
+        if isinstance(track, Track):
+            self.tracks: tuple[Track, ...] = (track,)
+        elif isinstance(track, str):
+            self.tracks = (load_track(track),)
+        else:
+            if len(track) == 0:
+                raise ValueError("at least one track is required")
+            self.tracks = tuple(load_track(name) for name in track)
+        self.track: Track = self.tracks[0]
         self.cfg = cfg
         n_rays = cfg.sim.rays.count
         low = np.concatenate(
@@ -63,6 +79,8 @@ class ApexDriveEnv(gym.Env[Obs, Act]):
         super().reset(seed=seed)
         if seed is not None:
             self.last_seed = seed
+        if len(self.tracks) > 1:
+            self.track = self.tracks[int(self.np_random.integers(len(self.tracks)))]
         self._world = self._initial_world()
         self._prev_action = Action(0.0, 0.0)
         self._a_lat = 0.0
@@ -126,6 +144,7 @@ class ApexDriveEnv(gym.Env[Obs, Act]):
     def _info(self, *, a_long: float, delta_s: float, lap_completed: bool) -> dict[str, Any]:
         w = self._world
         return {
+            "track": self.track.name,
             "tick": w.tick,
             "time": world_time(w, self.cfg.sim),
             "s": w.progress.s,

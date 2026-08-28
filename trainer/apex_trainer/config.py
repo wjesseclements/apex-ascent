@@ -264,11 +264,18 @@ class TrainConfig:
     checkpoint_interval: int = 50_000
     """Env steps between checkpoints (SPEC §6 default 50k)."""
 
+    tracks: tuple[str, ...] = ("track_a",)
+    """Tracks sampled per episode during training (Slice 6 E5). One track = the
+    Slice 4 baseline behaviour, bit-identical. The first entry is the run's
+    nominal track (evaluation default)."""
+
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> TrainConfig:
+        d = dict(d)
+        d["tracks"] = tuple(d.get("tracks", ("track_a",)))
         return cls(**d)
 
 

@@ -40,6 +40,19 @@ def build_train_parser() -> argparse.ArgumentParser:
     p.add_argument("--n-envs", type=int, default=DEFAULT_TRAIN.n_envs)
     p.add_argument("--vec-env", choices=VEC_ENV_KINDS, default=DEFAULT_TRAIN.vec_env)
     p.add_argument("--checkpoint-interval", type=int, default=DEFAULT_TRAIN.checkpoint_interval)
+    exp = p.add_argument_group("experiment overrides (Slice 6; each becomes a TUNING_LOG entry)")
+    exp.add_argument(
+        "--tracks",
+        help="comma-separated tracks sampled per episode, e.g. track_a,track_a_mirror "
+        "(default: --track only)",
+    )
+    exp.add_argument("--gamma", type=float, help="PPO discount (default 0.99)")
+    exp.add_argument("--ent-coef", type=float, help="PPO entropy coefficient (default 0.0)")
+    exp.add_argument(
+        "--train-jitter",
+        action="store_true",
+        help="train with the same start jitter evaluation uses (speed ±1, lateral ±1.5, ±5°)",
+    )
     return p
 
 
@@ -49,24 +62,38 @@ def train(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     from dataclasses import replace
 
-    from apex_trainer.config import DEFAULT_TRAIN
+    from apex_trainer.config import DEFAULT_ENV, DEFAULT_EVAL_JITTER, DEFAULT_PPO, DEFAULT_TRAIN
     from apex_trainer.train import TrainArgs
     from apex_trainer.train import train as run_training
 
+    tracks = tuple(t.strip() for t in args.tracks.split(",")) if args.tracks else (args.track,)
     train_cfg = replace(
         DEFAULT_TRAIN,
         n_envs=args.n_envs,
         vec_env=args.vec_env,
         checkpoint_interval=args.checkpoint_interval,
+        tracks=tracks,
     )
+    ppo_cfg = DEFAULT_PPO
+    if args.gamma is not None:
+        ppo_cfg = replace(ppo_cfg, gamma=args.gamma)
+    if args.ent_coef is not None:
+        ppo_cfg = replace(ppo_cfg, ent_coef=args.ent_coef)
+    env_cfg = DEFAULT_ENV
+    if args.train_jitter:
+        env_cfg = replace(
+            DEFAULT_ENV, episode=replace(DEFAULT_ENV.episode, start_jitter=DEFAULT_EVAL_JITTER)
+        )
     result = run_training(
         TrainArgs(
             steps=args.steps,
             seed=args.seed,
-            track=args.track,
+            track=tracks[0],
             runs_dir=args.runs_dir,
             run_id=args.run_id,
             resume=args.resume,
+            env_cfg=env_cfg,
+            ppo_cfg=ppo_cfg,
             train_cfg=train_cfg,
         )
     )
