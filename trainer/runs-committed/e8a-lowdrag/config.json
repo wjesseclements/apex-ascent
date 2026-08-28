@@ -1,0 +1,64 @@
+{
+  "track": "track_a",
+  "seed": 0,
+  "env": {
+    "sim": {
+      "physics": {
+        "dt": 0.016666666666666666,
+        "traction_accel_max": 20.0,
+        "throttle_accel_max": 12.0,
+        "brake_accel_max": 20.0,
+        "v_max": 30.0,
+        "drag": 0.05,
+        "steer_rate": 2.5,
+        "start_speed": 2.0
+      },
+      "rays": {
+        "count": 12,
+        "half_fan": 1.5707963267948966,
+        "max_length": 60.0
+      }
+    },
+    "observation": {
+      "version": "v0"
+    },
+    "reward": {
+      "progress_scale": 1.0,
+      "crash_penalty": 10.0
+    },
+    "episode": {
+      "max_steps": 3600,
+      "start_jitter": {
+        "speed": 0.0,
+        "lateral": 0.0,
+        "heading": 0.0
+      }
+    }
+  },
+  "ppo": {
+    "learning_rate": 0.0003,
+    "n_steps": 2048,
+    "batch_size": 64,
+    "n_epochs": 10,
+    "gamma": 0.995,
+    "gae_lambda": 0.95,
+    "clip_range": 0.2,
+    "ent_coef": 0.0,
+    "vf_coef": 0.5,
+    "max_grad_norm": 0.5,
+    "net_arch": [
+      64,
+      64
+    ],
+    "device": "cpu",
+    "torch_threads": 1
+  },
+  "train": {
+    "n_envs": 8,
+    "vec_env": "subproc",
+    "checkpoint_interval": 50000,
+    "tracks": [
+      "track_a"
+    ]
+  }
+}

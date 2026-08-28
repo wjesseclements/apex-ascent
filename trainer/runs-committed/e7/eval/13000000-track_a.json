@@ -1,0 +1,32 @@
+{
+  "run_id": "e7",
+  "checkpoint_steps": 13000000,
+  "track": "track_a",
+  "seed": 0,
+  "jitter": {
+    "speed": 0.0,
+    "lateral": 0.0,
+    "heading": 0.0
+  },
+  "episodes": [
+    {
+      "steps": 3600,
+      "crashed": false,
+      "truncated": true,
+      "laps": 3,
+      "lap_times": [
+        17.2,
+        15.799999999999999,
+        15.816666666666666
+      ],
+      "total_reward": 1621.157025323157,
+      "distance": 1621.157025323157,
+      "mean_drive": 0.9736178657081392,
+      "seed": 0,
+      "best_lap": 15.799999999999999,
+      "laps_attempted": 3,
+      "clean_laps": 3
+    }
+  ],
+  "summary": "summary: ppo@13000000 on track_a, 1 episode(s): crash rate 0/1, clean laps 3/3 (100%), mean return 1621.2, mean distance 1621.2 m, mean drive +0.97, best lap 15.80 s"
+}

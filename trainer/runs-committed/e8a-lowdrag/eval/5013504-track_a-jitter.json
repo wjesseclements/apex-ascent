@@ -1,0 +1,68 @@
+{
+  "run_id": "e8a-lowdrag",
+  "checkpoint_steps": 5013504,
+  "track": "track_a",
+  "seed": 0,
+  "jitter": {
+    "speed": 1.0,
+    "lateral": 1.5,
+    "heading": 0.08726646259971647
+  },
+  "episodes": [
+    {
+      "steps": 3600,
+      "crashed": false,
+      "truncated": true,
+      "laps": 3,
+      "lap_times": [
+        16.28333333333333,
+        15.166666666666666,
+        15.166666666666666
+      ],
+      "total_reward": 1700.6900041365113,
+      "distance": 1700.6358305911078,
+      "mean_drive": 0.5614272307935688,
+      "seed": 0,
+      "best_lap": 15.166666666666666,
+      "laps_attempted": 3,
+      "clean_laps": 3
+    },
+    {
+      "steps": 3600,
+      "crashed": false,
+      "truncated": true,
+      "laps": 3,
+      "lap_times": [
+        16.316666666666666,
+        15.183333333333334,
+        15.166666666666666
+      ],
+      "total_reward": 1699.1989240606008,
+      "distance": 1699.1989240606008,
+      "mean_drive": 0.5609534675545162,
+      "seed": 1,
+      "best_lap": 15.166666666666666,
+      "laps_attempted": 3,
+      "clean_laps": 3
+    },
+    {
+      "steps": 3600,
+      "crashed": false,
+      "truncated": true,
+      "laps": 3,
+      "lap_times": [
+        16.35,
+        15.166666666666666,
+        15.183333333333334
+      ],
+      "total_reward": 1698.6072107067275,
+      "distance": 1698.559791857147,
+      "mean_drive": 0.5627579341787431,
+      "seed": 2,
+      "best_lap": 15.166666666666666,
+      "laps_attempted": 3,
+      "clean_laps": 3
+    }
+  ],
+  "summary": "summary: ppo@5013504 on track_a, 3 episode(s): crash rate 0/3, clean laps 9/9 (100%), mean return 1699.5, mean distance 1699.5 m, mean drive +0.56, best lap 15.17 s"
+}
