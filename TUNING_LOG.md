@@ -446,3 +446,20 @@ circle in *both* halves now. The Slice 7 "no braking" result was an
 environment property; the trail-braking question is answered **yes** as soon
 as the environment makes braking worth the grip. Seed 1 and the no-drag
 limit follow; the headline is confirmed only if seed 1 agrees.
+
+**E8a seed 1 (low-drag, γ 0.995, 5M) — confirms.** Sweep: 100 % clean from 2M
+(best 15.22 s @ 2M). g-g survey:
+
+| ckpt | best lap | grip | braking ticks | trail-braking ticks | brake events | min a_long | mean drive |
+|---|---|---|---|---|---|---|---|
+| 1M | 15.63 s | 87 % | 22.4 % | 16.2 % | 176 | −12.1 | +0.37 |
+| 3M | 15.28 s | 90 % | 32.1 % | 21.0 % | 33 | −19.2 | +0.41 |
+| 5.01M | crash @ — | 65 % | 4.0 % | 0.0 % | 1 | −1.0 | +0.79 |
+
+Both seeds brake and trail-brake at every good checkpoint (16–21 % of ticks
+for seed 1, 14–18 % for seed 0; ~10 brake events per lap once the jittery
+early braking of 1M settles). Seed 1's *final* checkpoint is a degraded one
+(crashes, has stopped braking) — the checkpoint-instability pattern from
+Slice 6 again, and the reason the competence pick is always a sweep. The
+headline is confirmed across seeds: **under low drag, PPO discovers
+trail-braking.** The no-drag limit (E8b) follows.

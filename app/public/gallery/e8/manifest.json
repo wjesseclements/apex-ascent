@@ -1,0 +1,136 @@
+{
+ "schemaVersion": 1,
+ "runId": "e8a-lowdrag-s0",
+ "title": "E8a \u2014 PPO, \u03b3 0.995, LOW DRAG (0.05/s), Track A only, 5M steps",
+ "description": "Same algorithm, reward and network as E7 \u2014 but drag no longer slows the car for free. Watch the g-g dot: it now visits the brake half of the circle.",
+ "physicsConfigHash": "f9155cc74c98",
+ "config": {
+  "gamma": 0.995,
+  "ent_coef": 0.0,
+  "tracks": "track_a",
+  "seed": 0,
+  "n_envs": 8
+ },
+ "tracks": [
+  "track_a",
+  "track_b"
+ ],
+ "checkpoints": [
+  {
+   "step": 250000,
+   "label": "250k",
+   "note": "",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e8a-lowdrag-s0-250000-track_a.trajectory.json",
+     "crashed": true,
+     "laps": 0,
+     "bestLapSec": null,
+     "lapTimesSec": [],
+     "distanceM": 213.04459947766296,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 1000000,
+   "label": "1M",
+   "note": "Already braking: 32 % of ticks, 30 brake events.",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e8a-lowdrag-s0-1000000-track_a.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 15.733333333333333,
+     "lapTimesSec": [
+      16.933333333333334,
+      15.733333333333333,
+      15.733333333333333
+     ],
+     "distanceM": 1638.3412820676704,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 2000000,
+   "label": "2M",
+   "note": "",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e8a-lowdrag-s0-2000000-track_a.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 15.4,
+     "lapTimesSec": [
+      16.45,
+      15.4,
+      15.4
+     ],
+     "distanceM": 1681.7078883166432,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 3000000,
+   "label": "3M",
+   "note": "",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e8a-lowdrag-s0-3000000-track_a.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 15.35,
+     "lapTimesSec": [
+      16.466666666666665,
+      15.35,
+      15.35
+     ],
+     "distanceM": 1680.7260168714913,
+     "sampleHz": 30.0
+    }
+   ]
+  },
+  {
+   "step": 5013504,
+   "label": "5M \u00b7 brakes",
+   "note": "Best lap 15.17 s; braking on 22 % of ticks, trail-braking on 14 %.",
+   "entries": [
+    {
+     "trackId": "track_a",
+     "file": "e8a-lowdrag-s0-5013504-track_a.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 15.166666666666666,
+     "lapTimesSec": [
+      16.3,
+      15.166666666666666,
+      15.183333333333334
+     ],
+     "distanceM": 1700.0301455098788,
+     "sampleHz": 30.0
+    },
+    {
+     "trackId": "track_b",
+     "file": "e8a-lowdrag-s0-5013504-track_b.trajectory.json",
+     "crashed": false,
+     "laps": 3,
+     "bestLapSec": 18.483333333333334,
+     "lapTimesSec": [
+      19.566666666666666,
+      18.483333333333334,
+      18.53333333333333
+     ],
+     "distanceM": 1628.0723725872529,
+     "sampleHz": 30.0
+    }
+   ]
+  }
+ ],
+ "createdAt": "2026-08-28T20:07:20.416057+00:00"
+}

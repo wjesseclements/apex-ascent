@@ -1,6 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import manifestJson from '../../public/gallery/e7/manifest.json';
+import manifestE8 from '../../public/gallery/e8/manifest.json';
 import scripted from '../../public/trajectories/scripted-track_a.trajectory.json';
 import { parseGalleryManifest } from '../engine/gallery';
 import { selectPrimary, useTransport } from '../store/transport';
@@ -21,7 +22,11 @@ beforeEach(() => {
     'fetch',
     vi.fn(async (url: string) => {
       if (url.endsWith('manifest.json'))
-        return { ok: true, status: 200, json: async () => manifestJson };
+        return {
+          ok: true,
+          status: 200,
+          json: async () => (url.includes('/e8/') ? manifestE8 : manifestJson),
+        };
       const m = /-(\d+)-([a-z_]+)\.trajectory\.json$/.exec(url);
       const meta = {
         ...scripted.meta,
@@ -54,6 +59,15 @@ describe('Gallery', () => {
     expect(screen.getByText(/crash @ 263 m/)).toBeInTheDocument(); // 6M on B
     await userEvent.click(screen.getByRole('button', { name: /focus 8M · generalist on track_b/ }));
     expect(selectPrimary(useTransport.getState())?.label).toBe('8M · generalist · track_b');
+  });
+  it('switching gallery loads the other run and focuses its last checkpoint', async () => {
+    render(<Gallery />);
+    await screen.findByRole('tablist', { name: 'track' });
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'gallery run' }), 'e8');
+    expect(await screen.findByText(/LOW DRAG/)).toBeInTheDocument();
+    await act(async () => {});
+    expect(selectPrimary(useTransport.getState())?.label).toBe('5M · brakes · track_a');
+    expect(useTransport.getState().cars).toHaveLength(1);
   });
   it('shows an error when the manifest cannot be fetched', async () => {
     vi.stubGlobal(
