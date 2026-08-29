@@ -23,14 +23,18 @@ and the environment decides that:
 
 | drag (1/s) | free deceleration at 30 m/s | braking ticks | trail-braking ticks | brake events / lap | best lap (Track A) |
 |---|---|---|---|---|---|
-| 0.30 — the SPEC car | 9.0 m/s² | **0 %** (every run, every checkpoint) | **0 %** | 0 | 15.80 s |
+| 0.30 — the SPEC car | 9.0 m/s² | **0 %** (every run, every checkpoint) | **0 %** | 0 | 15.93 s¹ |
 | 0.05 | 1.5 m/s² | 22–32 % (two seeds) | **14–21 %** | ~10 | 15.17 s |
 | 0.00 | 0 | 27–39 % | **16–29 %** | ~17 | 15.17 s |
 
 Same algorithm (SB3 PPO, defaults except γ = 0.995), same reward (metres of
 progress per tick, −10 on a crash), same [64, 64] network, same 16-number
-observation, same 5M-step budget. Only how much the environment slows the car
-*for free* changes. A "trail-braking tick" means a brake command below
+observation, same 5M-step budget, seed 0 in every row. Only how much the
+environment slows the car *for free* changes.
+
+¹ The SPEC-car row is the 5M-step run (`e2-gamma0995`, 5.01M checkpoint,
+deterministic evaluation) to keep the budget equal across rows; the same
+configuration trained to 20M reaches 15.80 s at its 13M checkpoint (§2, §6). A "trail-braking tick" means a brake command below
 −2 m/s² (`a_long` excludes drag, so lifting reads as zero — verified in the
 sim code, not assumed) while carrying more than 4 m/s² of lateral load.
 
@@ -72,8 +76,9 @@ the SPEC car, +0.12 at low drag, +0.06 with none.
 
 Track A is all right-handers. Trained on it alone, the γ = 0.99 baseline
 crashes at the first left-hander of both unseen tracks (mirrored A, Track B) —
-for two of three seeds; the third drives the mirror cleanly having never seen
-a left-hander.
+for two of three seeds; the third (seed 1) drives the mirror cleanly having
+never seen a left-hander — and still crashes on Track B at 194 m (0/10
+jittered laps), so handedness was only the first thing missing.
 
 With γ = 0.995 the picture changes: the 8M checkpoint of the 20M run
 (`e7-gamma0995-20m`, trained on Track A only) drives **all three tracks
@@ -95,8 +100,9 @@ the exit of" over "gain 0.4 m this tick", and that policy is track-agnostic.
 
 ## 4. Seeds, instability and the checkpoint sweep
 
-- Three seeds of the baseline: best laps 16.02 / 16.15 / 16.18 s, 90/90 clean
-  jittered laps. A 0.16 s spread is the noise floor every later comparison is
+- Three seeds of the baseline (γ 0.99, 5M): best laps 16.02 / 16.15 / 16.18 s
+  for seeds 2 / 1 / 0, 90/90 clean jittered laps. (Seed 2's 16.02 s is a
+  coincidence with E7 @ 8M's 16.02 s in §3 — different run, different γ.) A 0.16 s spread is the noise floor every later comparison is
   held against ("inside the spread = no effect").
 - Training with start jitter (E4) produced checkpoints that **alternate**
   between excellent (4.0M: 16.17 s, 15/15 clean) and crashing (3.5M, 5.0M)
@@ -126,22 +132,36 @@ episodes, ~170 µs per tick for all 100 cars single-threaded, ~40–130× real
 time in the browser; its grip-20 champion arrived at generation 98 on seed 42
 — at most ~17.6M car-ticks (fewer, since crashed cars stop), a few minutes of
 wall-clock. PPO used comparable samples (5M–20M) and far more wall-clock per
-sample (the network update, not the sim, is the cost) — and, unlike the GA,
-the result is a policy that reads sensors rather than a genome tuned to one
-track.
+sample (the network update, not the sim, is the cost). Both produce a small
+sensor-reading network (the GA's: 7 rays + speed → 10 tanh → 2); the
+difference is how it is found — gradient updates from per-tick reward within
+an agent's lifetime versus selection over generations on whole-episode
+fitness — and, for the write-up, that PPO's route leaves a per-tick record
+(observations, rewards, checkpoints) that this report is built from.
 
 ## 6. Informal comparison with the GA champion
 
 | | apex-evolve GA (grip 20, seed 42) | PPO competence (E7 @ 8M) | PPO specialist (E7 @ 13M) | PPO low drag (E8a @ 5M) |
 |---|---|---|---|---|
 | Track A best lap | 18.83 s (18.17 s on seed 43) | 16.02 s | 15.80 s | 15.17 s |
-| unseen Track B | crashes (solo) | 18.98 s, clean | crashes | — |
+| unseen Track B | 3 of 4 lapping champions lap B solo, 21.4–22.2 s; seed 42's crashes² | 18.98 s, clean | crashes | — |
 | brakes? | lifts and coasts; brakes on two entries | never | never | yes, ~10 events/lap |
 
 Two caveats stated up front: our crash rule is the car's *centre* leaving the
 surface (the GA used four corners, ≈ 0.9 m stricter per side), and our
-episodes are 60 s with jittered evaluation starts. Same tracks, same traction
-circle, same 12 m width, same speed range.
+episodes are 60 s against the GA's 30 s. The PPO lap times in this table are
+**deterministic evaluations from the fixed start line**; start jitter is used
+only for clean-lap rates and checkpoint selection (§4), never for the headline
+lap. Same tracks, same traction circle, same 12 m width, same speed range.
+
+² apex-evolve's generalization protocol (its FINDINGS §5): champions after
+40 generations, seeds 42–46, run *solo* — alone, one 30 s episode — on the
+other track. Of the four A-trained champions that lapped their own track,
+three lapped Track B (21.4, 22.0, 22.2 s; within ~15 % of their home laps) and
+one (seed 45) crashed at 73 m; seed 42's champion had not lapped Track A by
+generation 40 and crashed on B at 65 m. Its 18.83 s Track A lap above is from
+the separate 100-generation grip run. So the GA's reactive reflex transfers
+about as often as our γ 0.995 checkpoints do — the difference is which ones.
 
 ## 7. What did not work
 
