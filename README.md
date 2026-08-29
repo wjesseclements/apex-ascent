@@ -13,6 +13,7 @@ Successor to [apex-evolve](https://github.com/wjesseclements/apex-evolve)
 
 ## Documents
 
+- **[FINDINGS.md](FINDINGS.md)** — what we found (start here).
 - **[SPEC.md](SPEC.md)** — what we're building and why.
 - **[SLICES.md](SLICES.md)** — the plan, slice by slice, each ending in a demo.
 - **[CLAUDE.md](CLAUDE.md)** — the engineering rules.
@@ -59,6 +60,31 @@ Every PR runs two required jobs, `trainer` and `app`, plus a `verify` gate
 that only passes when both do. `main` accepts squash merges through PRs only
 (ruleset in `.github/rulesets/main.json`). The app deploys to Vercel from
 `app/` on every merge.
+
+## Reproduce an evaluation in two commands
+
+Prerequisites: [uv](https://docs.astral.sh/uv/) (it installs Python 3.12
+itself). Then:
+
+```
+cd trainer && uv sync
+uv run evaluate runs-committed/e7 --checkpoint 8000000 --track track_b --episodes 10 --jitter
+```
+
+Expected: `crash rate 0/10, clean laps 30/30 (100%) … best lap 18.98 s` — a
+policy trained only on Track A, lapping Track B. Other committed checkpoints:
+`--checkpoint 13000000` (the specialist: 15.80 s on `--track track_a`, crashes
+on B) and `runs-committed/e8a-lowdrag --checkpoint 5013504` (the low-drag car
+that brakes; add `--export DIR` to write a trajectory you can open in the app).
+The numbers are pinned by `trainer/tests/test_committed_runs.py`; lap times
+may differ by a few hundredths on another CPU (closed-loop drift), the laps
+and outcomes should not.
+
+To train your own: `uv run train --steps 5000000 --seed 0 --gamma 0.995`
+(≈ 12 min on a 16-core laptop), then `uv run python -m
+apex_trainer.debug.select_checkpoint runs/<id>` to pick a checkpoint by
+evaluation rather than recency. The app: `cd app && npm ci && npm run dev`
+(Node 24).
 
 ## Reproducibility
 
