@@ -32,11 +32,13 @@ progress per tick, −10 on a crash), same [64, 64] network, same 16-number
 observation, same 5M-step budget, seed 0 in every row. Only how much the
 environment slows the car *for free* changes.
 
+A "trail-braking tick" means a brake command below −2 m/s² (`a_long`
+excludes drag, so lifting reads as zero — verified in the sim code, not
+assumed) while carrying more than 4 m/s² of lateral load.
+
 ¹ The SPEC-car row is the 5M-step run (`e2-gamma0995`, 5.01M checkpoint,
 deterministic evaluation) to keep the budget equal across rows; the same
-configuration trained to 20M reaches 15.80 s at its 13M checkpoint (§2, §6). A "trail-braking tick" means a brake command below
-−2 m/s² (`a_long` excludes drag, so lifting reads as zero — verified in the
-sim code, not assumed) while carrying more than 4 m/s² of lateral load.
+configuration trained to 20M reaches 15.80 s at its 13M checkpoint (§2, §6).
 
 Under the SPEC car, drag alone decelerates the car at 9 m/s² at top speed —
 almost half the 20 m/s² grip budget, and free. Every checkpoint of every run
